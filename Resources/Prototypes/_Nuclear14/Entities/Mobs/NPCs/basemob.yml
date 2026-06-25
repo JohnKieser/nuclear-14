@@ -87,6 +87,8 @@
   parent: N14MobBaseSimple
   description: It's a dirty wasteland animal. Watch out for it's bite, it could be infectious.
   components:
+  - type: PathfindingCustomizable # Misfits Add — Better/customizable and less exploitable pathfinding
+    nodeLimit: 225
   - type: Hunger
     thresholds:
       Overfed: 200
