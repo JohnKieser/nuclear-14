@@ -7,6 +7,7 @@ using Content.Shared.DoAfter;
 using Content.Shared.Doors.Components;
 using Content.Shared.NPC;
 using Content.Shared.Weapons.Melee;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -224,7 +225,14 @@ public sealed partial class NPCSteeringSystem
             return;
         }
 
-        foreach (var ent in _map.GetLocalAnchoredEntities(poly.GraphUid, grid, poly.Box))
+        /// MISFIT CHANGE: Now mobs can target unanchored stuff
+        var pathTile = _map.GetTileRef(poly.GraphUid, grid, poly.Coordinates);
+
+        /// replaced foreach original:
+        // foreach (var ent in _map.GetLocalAnchoredEntities(poly.GraphUid, grid, poly.Box))
+        foreach (var ent in _lookup.GetLocalEntitiesIntersecting(poly.GraphUid, pathTile.GridIndices,
+                                                            -0.02f, LookupFlags.Dynamic | LookupFlags.Static))
+        /// END CHANGE
         {
             if (!_physicsQuery.TryGetComponent(ent, out var body) ||
                 !body.Hard ||

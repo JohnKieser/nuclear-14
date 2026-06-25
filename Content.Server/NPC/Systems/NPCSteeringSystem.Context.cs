@@ -4,7 +4,9 @@ using Content.Server.Examine;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared.Climbing;
+using Content.Shared.Coordinates; /// Misfit Change
 using Content.Shared.Interaction;
+using Content.Shared.Maps; /// Misfit Change
 using Content.Shared.Movement.Components;
 using Content.Shared.NPC;
 using Content.Shared.Physics;
@@ -28,8 +30,10 @@ public sealed partial class NPCSteeringSystem
         {
             var angle = i * InterestRadians;
             var dot = MathF.Cos(directionAngle - angle);
-            dot = (dot + 1f) * 0.5f;
+            /// Misfit Change:
+            /// dot = (dot + 1f) * 0.5f;
             interest[i] = Math.Clamp(interest[i] + dot * weight, 0f, 1f);
+            /// end change
         }
     }
 
@@ -58,7 +62,8 @@ public sealed partial class NPCSteeringSystem
 
         // TODO: Ideally for "FreeSpace" we check all entities on the tile and build flags dynamically (pathfinder refactor in future).
         var ents = _entSetPool.Get();
-        _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: LookupFlags.Static);
+        _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: LookupFlags.Static | LookupFlags.Dynamic);
+        /// End Change: Original: _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: LookupFlags.Static);
         var result = true;
 
         if (ents.Count > 0)
@@ -214,12 +219,16 @@ public sealed partial class NPCSteeringSystem
                 // Breaking behaviours and the likes.
                 lock (_obstacles)
                 {
+                    /// MISFIT CHANGE: This made it way more likely NPCs just danced infinitely
+                    /// They wouldn't ever stop to attack an obstacle since the steerer would tell them
+                    /// to avoid said obstacle
+                    /*
                     // We're still coming to a stop so wait for the do_after.
                     if (body.LinearVelocity.LengthSquared() > 0.01f)
                     {
                         return true;
                     }
-
+                    */
                     status = TryHandleFlags(uid, steering, node);
                 }
 
@@ -509,7 +518,7 @@ public sealed partial class NPCSteeringSystem
     #endregion
 
     #region Static Avoidance
-
+    /// Misfit Change: added NPCSteeringComponent steering param
     /// <summary>
     /// Tries to avoid static blockers such as walls.
     /// </summary>
@@ -521,11 +530,13 @@ public sealed partial class NPCSteeringSystem
         int layer,
         int mask,
         TransformComponent xform,
-        Span<float> danger)
+        Span<float> danger, NPCSteeringComponent steering)
     {
         var objectRadius = 0.25f;
         var detectionRadius = MathF.Max(0.35f, agentRadius + objectRadius);
         var ents = _entSetPool.Get();
+
+        /// might be better to have this be based on the polygons that have been built and searched for
         _lookup.GetEntitiesInRange(uid, detectionRadius, ents, LookupFlags.Dynamic | LookupFlags.Static);
 
         foreach (var ent in ents)
@@ -540,6 +551,11 @@ public sealed partial class NPCSteeringSystem
             {
                 continue;
             }
+
+
+            /// Misfit Change: ignore obstacles in same tile as current path
+            if (IsObstacleInPath(steering, ent)) continue;
+            /// End Change
 
             var xformB = _xformQuery.GetComponent(ent);
 
@@ -575,12 +591,29 @@ public sealed partial class NPCSteeringSystem
             for (var i = 0; i < InterestDirections; i++)
             {
                 var dot = Vector2.Dot(norm, Directions[i]);
-                danger[i] = MathF.Max(dot * weight, danger[i]);
+                /// Misfit Change: danger[i] = MathF.Max(dot * weight, danger[i]);
+                danger[i] = dot * weight;
+                /// End Change
             }
         }
 
         _entSetPool.Return(ents);
     }
+    /// Misfit Add: true if ent in same path as current pathpoly
+    private bool IsObstacleInPath(NPCSteeringComponent steerer, EntityUid ent)
+    {
+        if (!steerer.CurrentPath.TryPeek(out PathPoly? node) ||
+            !_entityQuery.TryGetComponent(node.GraphUid, out var mapComp))
+            return false;
+        /// TileRef is hashed so seems fastest to see if both are in same tile
+        /// Though might change polypath to have the entID
+        /// to make this faster and simpler
+        var pathTile = _map.GetTileRef(node.GraphUid, mapComp, node.Coordinates);
+        var obstacleTile = _map.GetTileRef(node.GraphUid, mapComp, ent.ToCoordinates());
+
+        return pathTile.Equals(obstacleTile);
+    }
+    /// End
 
     #endregion
 
