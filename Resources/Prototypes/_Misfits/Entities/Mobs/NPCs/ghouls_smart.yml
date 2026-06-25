@@ -1,0 +1,8 @@
+- type: entity
+  name: Feral Ghoul
+  id: N14MobGhoulFeralSmart
+  parent: N14MobGhoulFeral
+  suffix: Smart
+  components:
+  - type: PathfindingCustomizable
+    nodeLimit: 225
