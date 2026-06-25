@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.NPC.Components;
@@ -78,7 +79,7 @@ public sealed partial class MeleeOperator : HTNOperator, IHtnConditionalShutdown
     public override void PlanShutdown(NPCBlackboard blackboard)
     {
         base.PlanShutdown(blackboard);
-        
+
         ConditionalShutdown(blackboard);
     }
 
@@ -87,11 +88,17 @@ public sealed partial class MeleeOperator : HTNOperator, IHtnConditionalShutdown
         base.Update(blackboard, frameTime);
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
         HTNOperatorStatus status;
-
-        if (_entManager.TryGetComponent<NPCMeleeCombatComponent>(owner, out var combat) &&
-            blackboard.TryGetValue<EntityUid>(TargetKey, out var target, _entManager))
+        // DEBUG
+        bool hasMeleeComp = _entManager.TryGetComponent<NPCMeleeCombatComponent>(owner, out var combat);
+        bool hasTarget = blackboard.TryGetValue<EntityUid>(TargetKey, out var target, _entManager);
+        //Debug.Print(($"hasMeleeComp:{hasMeleeComp} \nhasTarget:{hasTarget}"));
+        // DEBUG
+        // if (_entManager.TryGetComponent<NPCMeleeCombatComponent>(owner, out var combat) &&
+        //      blackboard.TryGetValue<EntityUid>(TargetKey, out var target, _entManager) ) {...}
+        if (combat != null && hasTarget)
         {
             combat.Target = target;
+            // Debug.Print(($"{target.Id}"));
 
             // Success
             if (_entManager.TryGetComponent<MobStateComponent>(target, out var mobState) &&
