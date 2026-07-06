@@ -20,7 +20,7 @@ namespace Content.Client.Atmos.Overlays;
 public sealed class AtmosDebugOverlay : Overlay
 {
     [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly IInputManager _input = default!;
     [Dependency] private readonly IUserInterfaceManager _ui = default!;
     [Dependency] private readonly IResourceCache _cache = default!;
@@ -157,7 +157,7 @@ public sealed class AtmosDebugOverlay : Overlay
         }
 
         // -- Excited Groups --
-        if (data.InExcitedGroup is {} grp)
+        if (data.InExcitedGroup is { } grp)
         {
             var basisA = tile;
             var basisB = tile + new Vector2(1.0f, 1.0f);
@@ -218,7 +218,7 @@ public sealed class AtmosDebugOverlay : Overlay
         if (_ui.MouseGetControl(mousePos) is not IViewportControl viewport)
             return;
 
-        var coords= viewport.PixelToMap(mousePos.Position);
+        var coords = viewport.PixelToMap(mousePos.Position);
         var box = Box2.CenteredAround(coords.Position, 3 * Vector2.One);
         GetGrids(coords.MapId, new Box2Rotated(box));
 
@@ -239,7 +239,7 @@ public sealed class AtmosDebugOverlay : Overlay
     private void DrawTooltip(DrawingHandleScreen handle, Vector2 pos, AtmosDebugOverlayData data)
     {
         var lineHeight = _font.GetLineHeight(1f);
-        var offset  = new Vector2(0, lineHeight);
+        var offset = new Vector2(0, lineHeight);
 
         var moles = data.Moles == null
             ? "No Air"

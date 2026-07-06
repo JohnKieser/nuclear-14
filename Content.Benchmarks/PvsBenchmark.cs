@@ -65,7 +65,7 @@ public class PvsBenchmark
             var success = _entMan.System<MapLoaderSystem>().TryLoadMapWithId(_mapId, new Robust.Shared.Utility.ResPath(Map), out _, out _);
             if (!success)
                 throw new Exception("Map load failed");
-            _pair.Server.MapMan.DoMapInitialize(_mapId);
+            _pair.Server.System<SharedMapSystem>().InitializeMap(_mapId);
         }).Wait();
 
         // Get list of ghost warp positions
@@ -82,9 +82,9 @@ public class PvsBenchmark
             for (var i = 0; i < PlayerCount; i++)
             {
                 var pos = _spawns[i % _spawns.Length];
-                var uid =_entMan.SpawnEntity("MobHuman", pos);
+                var uid = _entMan.SpawnEntity("MobHuman", pos);
                 _pair.Server.ConsoleHost.ExecuteCommand($"setoutfit {_entMan.GetNetEntity(uid)} CaptainGear");
-                _players[i] = new DummySession{AttachedEntity = uid};
+                _players[i] = new DummySession { AttachedEntity = uid };
             }
         }).Wait();
 
@@ -172,7 +172,7 @@ public class PvsBenchmark
     private sealed class DummySession : ICommonSession
     {
         public SessionStatus Status => SessionStatus.InGame;
-        public EntityUid? AttachedEntity {get; set; }
+        public EntityUid? AttachedEntity { get; set; }
         public NetUserId UserId => default;
         public string Name => string.Empty;
         public short Ping => default;

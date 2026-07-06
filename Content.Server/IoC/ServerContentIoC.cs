@@ -43,6 +43,7 @@ namespace Content.Server.IoC
     {
         public static void Register()
         {
+            SharedContentIoC.Register(deps);
             IoCManager.Register<IChatManager, ChatManager>();
             IoCManager.Register<ISharedChatManager, ChatManager>();
             IoCManager.Register<IChatSanitizationManager, ChatSanitizationManager>();

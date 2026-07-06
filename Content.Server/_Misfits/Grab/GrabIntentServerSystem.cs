@@ -26,7 +26,7 @@ public sealed class GrabIntentServerSystem : EntitySystem
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly GrabIntentSystem _grabIntent = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedStunSystem _stun = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -176,7 +176,7 @@ public sealed class GrabIntentServerSystem : EntitySystem
         throwDamage.DamageDict.Add(grabComp.GrabThrowDamageModifier >= 1
             ? "Blunt"
             : "Blunt",
-            (double)(grabComp.GrabThrowDamage * grabComp.GrabThrowDamageModifier));
+            (double) (grabComp.GrabThrowDamage * grabComp.GrabThrowDamageModifier));
 
         // Deal damage to target when thrown
         _damageable.TryChangeDamage(target, throwDamage, origin: puller);

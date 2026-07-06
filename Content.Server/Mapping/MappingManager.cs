@@ -25,7 +25,7 @@ public sealed class MappingManager : IPostInjectInit
 {
     [Dependency] private readonly IAdminManager _admin = default!;
     [Dependency] private readonly ILogManager _log = default!;
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly IServerNetManager _net = default!;
     [Dependency] private readonly IPlayerManager _players = default!;
     [Dependency] private readonly IEntitySystemManager _systems = default!;
@@ -68,7 +68,7 @@ public sealed class MappingManager : IPostInjectInit
             }
 
             var mapId = _systems.GetEntitySystem<TransformSystem>().GetMapCoordinates(player).MapId;
-            var mapEntity = _map.GetMapEntityIdOrThrow(mapId);
+            var mapEntity = _map.GetMapOrInvalid(mapId);
             var (data, _) = _systems.GetEntitySystem<MapLoaderSystem>().SerializeEntitiesRecursive(new HashSet<EntityUid> { mapEntity });
             var document = new YamlDocument(data.ToYaml());
             var stream = new YamlStream { document };
@@ -98,7 +98,7 @@ public sealed class MappingManager : IPostInjectInit
 
         var path = new ResPath(FavoritesPath);
         using var writer = _resourceMan.UserData.OpenWriteText(path);
-        var stream = new YamlStream {new(mapping.ToYaml())};
+        var stream = new YamlStream { new(mapping.ToYaml()) };
         stream.Save(new YamlMappingFix(new Emitter(writer)), false);
     }
 

@@ -16,7 +16,7 @@ namespace Content.Client.NodeContainer
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedMapSystem _mapManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
@@ -26,7 +26,8 @@ namespace Content.Client.NodeContainer
         public HashSet<string> Filtered { get; } = new();
 
         public Dictionary<EntityUid, (NodeVis.GroupData group, NodeVis.NodeDatum node)[]>
-            Entities { get; private set; } = new();
+            Entities
+        { get; private set; } = new();
 
         public Dictionary<(int group, int node), NodeVis.NodeDatum> NodeLookup { get; private set; } = new();
 

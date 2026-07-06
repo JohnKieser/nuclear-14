@@ -46,7 +46,7 @@ public sealed class WastelandMapSystem : EntitySystem
     [Dependency] private readonly MobStateSystem _mobState = default!;
     [Dependency] private readonly IChatManager _chatManager = default!;
     // #Misfits Add - Auto-detect map bounds and texture
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
@@ -583,7 +583,7 @@ public sealed class WastelandMapSystem : EntitySystem
     {
         // Only care about transitions to or from Dead.
         var wasDead = args.OldMobState == MobState.Dead;
-        var isDead  = args.NewMobState == MobState.Dead;
+        var isDead = args.NewMobState == MobState.Dead;
         if (!wasDead && !isDead)
             return;
 

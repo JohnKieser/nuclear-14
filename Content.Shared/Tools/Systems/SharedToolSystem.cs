@@ -17,20 +17,20 @@ namespace Content.Shared.Tools.Systems;
 
 public abstract partial class SharedToolSystem : EntitySystem
 {
-    [Dependency] private   readonly IMapManager _mapManager = default!;
-    [Dependency] private   readonly IPrototypeManager _protoMan = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
+    [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] protected readonly ISharedAdminLogManager AdminLogger = default!;
-    [Dependency] private   readonly ITileDefinitionManager _tileDefManager = default!;
-    [Dependency] private   readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private   readonly SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
+    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
+    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] protected readonly SharedInteractionSystem InteractionSystem = default!;
     [Dependency] protected readonly ItemToggleSystem ItemToggle = default!;
-    [Dependency] private   readonly SharedMapSystem _maps = default!;
-    [Dependency] private   readonly SharedPopupSystem _popup = default!;
+    [Dependency] private readonly SharedMapSystem _maps = default!;
+    [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] protected readonly SharedSolutionContainerSystem SolutionContainerSystem = default!;
-    [Dependency] private   readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private   readonly TileSystem _tiles = default!;
-    [Dependency] private   readonly TurfSystem _turfs = default!;
+    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+    [Dependency] private readonly TileSystem _tiles = default!;
+    [Dependency] private readonly TurfSystem _turfs = default!;
     [Dependency] protected readonly SharedSolutionContainerSystem SolutionContainer = default!;
 
     public const string CutQuality = "Cutting";
@@ -282,7 +282,7 @@ public abstract partial class SharedToolSystem : EntitySystem
     [Serializable, NetSerializable]
     protected sealed partial class LatticeCuttingCompleteEvent : DoAfterEvent
     {
-        [DataField(required:true)]
+        [DataField(required: true)]
         public NetCoordinates Coordinates;
 
         private LatticeCuttingCompleteEvent() { }

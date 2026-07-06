@@ -18,13 +18,13 @@ namespace Content.Client.NodeContainer
     {
         private readonly NodeGroupSystem _system;
         private readonly EntityLookupSystem _lookup;
-        private readonly IMapManager _mapManager;
+        private readonly SharedMapSystem _mapManager;
         private readonly IInputManager _inputManager;
         private readonly IEntityManager _entityManager;
         private readonly SharedMapSystem _mapSystem;
 
         private readonly Dictionary<(int, int), NodeRenderData> _nodeIndex = new();
-        private readonly Dictionary<EntityUid, Dictionary<Vector2i, List<(GroupData, NodeDatum)>>> _gridIndex = new ();
+        private readonly Dictionary<EntityUid, Dictionary<Vector2i, List<(GroupData, NodeDatum)>>> _gridIndex = new();
         private List<Entity<MapGridComponent>> _grids = new();
 
         private readonly Font _font;
@@ -38,7 +38,7 @@ namespace Content.Client.NodeContainer
         public NodeVisualizationOverlay(
             NodeGroupSystem system,
             EntityLookupSystem lookup,
-            IMapManager mapManager,
+            SharedMapSystem mapManager,
             IInputManager inputManager,
             IResourceCache cache,
             IEntityManager entityManager)

@@ -65,7 +65,7 @@ public sealed partial class ShuttleSystem
         if (targetGrid == null)
             return;
 
-        var mapId = _mapManager.CreateMap();
+        var mapId = Comp<TransformComponent>(_mapManager.CreateMap()).MapID;
 
         if (_loader.TryLoadGrid(mapId, component.Path, out var loadedGrid))
         {
@@ -96,7 +96,7 @@ public sealed partial class ShuttleSystem
             return;
 
         // Spawn on a dummy map and try to FTL if possible, otherwise dump it.
-        var mapId = _mapManager.CreateMap();
+        var mapId = Comp<TransformComponent>(_mapManager.CreateMap()).MapID;
         var valid = true;
         var paths = new List<ResPath>();
 
@@ -192,13 +192,13 @@ public sealed partial class ShuttleSystem
         }
 
         // Spawn on a dummy map and try to dock if possible, otherwise dump it.
-        var mapId = _mapManager.CreateMap();
+        var mapId = Comp<Robust.Shared.Map.Components.MapComponent>(_mapManager.CreateMap()).MapId;
         var valid = false;
 
         if (_loader.TryLoadGrid(mapId, component.Path, out var loadedGrid) &&
             TryComp<TransformComponent>(loadedGrid.Value.Owner, out var shuttleXform))
         {
-            var gridUid = loadedGrid.Value.Owner;
+            Entity<TransformComponent> gridUid = (loadedGrid.Value.Owner, shuttleXform);
             var escape = GetSingleDock(gridUid);
 
             if (escape != null)
@@ -207,7 +207,7 @@ public sealed partial class ShuttleSystem
 
                 if (config != null)
                 {
-                    FTLDock((gridUid, shuttleXform), config);
+                    FTLDock(gridUid, config);
 
                     if (TryComp<StationMemberComponent>(xform.GridUid, out var stationMember))
                     {

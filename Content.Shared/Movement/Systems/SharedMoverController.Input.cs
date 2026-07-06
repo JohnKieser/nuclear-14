@@ -9,10 +9,13 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
+using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+
+// TODO: Check if need to refactor to be consistent with current engine changes
 
 namespace Content.Shared.Movement.Systems
 {
@@ -151,7 +154,7 @@ namespace Content.Shared.Movement.Systems
 
         public bool DiagonalMovementEnabled { get; private set; }
 
-        protected virtual void HandleShuttleInput(EntityUid uid, ShuttleButtons button, ushort subTick, bool state) {}
+        protected virtual void HandleShuttleInput(EntityUid uid, ShuttleButtons button, ushort subTick, bool state) { }
 
         private void OnAutoParentChange(Entity<AutoOrientComponent> entity, ref EntParentChangedMessage args)
         {
@@ -199,38 +202,43 @@ namespace Content.Shared.Movement.Systems
 
             // Okay need to get our old relative rotation with respect to our new relative rotation
             // e.g. if we were right side up on our current grid need to get what that is on our new grid.
-            var currentRotation = Angle.Zero;
-            var targetRotation = Angle.Zero;
+            var oldRelativeRot = Angle.Zero;
+            var relativeRot = Angle.Zero;
 
             // Get our current relative rotation
             if (XformQuery.TryGetComponent(mover.RelativeEntity, out var oldRelativeXform))
             {
-                currentRotation = _transform.GetWorldRotation(oldRelativeXform, XformQuery) + mover.RelativeRotation;
+                oldRelativeRot = _transform.GetWorldRotation(oldRelativeXform);
             }
 
             if (XformQuery.TryGetComponent(relative, out var relativeXform))
             {
                 // This is our current rotation relative to our new parent.
-                mover.RelativeRotation = (currentRotation - _transform.GetWorldRotation(relativeXform)).FlipPositive();
+                relativeRot = _transform.GetWorldRotation(relativeXform);
             }
+
+            var diff = relativeRot - oldRelativeRot;
 
             // If we went from grid -> map we'll preserve our worldrotation
-            if (relative != null && _mapManager.IsMap(relative.Value))
+            if (MapQuery.HasComp(relative) && MapGridQuery.HasComp(mover.RelativeEntity))
             {
-                targetRotation = currentRotation.FlipPositive().Reduced();
-            }
-            // If we went from grid -> grid OR grid -> map then snap the target to cardinal and lerp there.
-            // OR just rotate to zero (depending on cvar)
-            else if (relative != null && _mapManager.IsGrid(relative.Value))
-            {
-                if (CameraRotationLocked)
-                    targetRotation = Angle.Zero;
-                else
-                    targetRotation = mover.RelativeRotation.GetCardinalDir().ToAngle().Reduced();
+                mover.TargetRelativeRotation -= diff;
             }
 
+            // Snap to nearest cardinal if map -> grid or grid -> grid
+            else if (MapGridQuery.HasComp(relative) && (MapQuery.HasComp(mover.RelativeEntity) || MapGridQuery.HasComp(mover.RelativeEntity)))
+            {
+                var targetDir = mover.TargetRelativeRotation - diff;
+                targetDir = targetDir.GetCardinalDir().ToAngle().Reduced();
+                mover.TargetRelativeRotation = targetDir;
+            }
+            // Preserve target rotation in relation to the new parent.
+            // Regardless of what the target is don't want the eye to move at all (from the player's perspective).
+            mover.RelativeRotation -= diff;
+
+
             mover.RelativeEntity = relative;
-            mover.TargetRelativeRotation = targetRotation;
+            // Dirty(uid, mover);
             return true;
         }
 

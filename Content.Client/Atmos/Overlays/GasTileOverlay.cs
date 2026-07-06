@@ -20,7 +20,7 @@ namespace Content.Client.Atmos.Overlays
     public sealed class GasTileOverlay : Overlay
     {
         private readonly IEntityManager _entManager;
-        private readonly IMapManager _mapManager;
+        private readonly SharedMapSystem _mapManager;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities | OverlaySpace.WorldSpaceBelowWorld;
         private readonly ShaderInstance _shader;
@@ -49,7 +49,7 @@ namespace Content.Client.Atmos.Overlays
         public GasTileOverlay(GasTileOverlaySystem system, IEntityManager entManager, IResourceCache resourceCache, IPrototypeManager protoMan, SpriteSystem spriteSys)
         {
             _entManager = entManager;
-            _mapManager = IoCManager.Resolve<IMapManager>();
+            _mapManager = IoCManager.Resolve<SharedMapSystem>();
             _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
             ZIndex = GasOverlayZIndex;
 
@@ -66,9 +66,9 @@ namespace Content.Client.Atmos.Overlays
                 SpriteSpecifier overlay;
 
                 if (!string.IsNullOrEmpty(gasPrototype.GasOverlaySprite) && !string.IsNullOrEmpty(gasPrototype.GasOverlayState))
-                    overlay = new SpriteSpecifier.Rsi(new (gasPrototype.GasOverlaySprite), gasPrototype.GasOverlayState);
+                    overlay = new SpriteSpecifier.Rsi(new(gasPrototype.GasOverlaySprite), gasPrototype.GasOverlayState);
                 else if (!string.IsNullOrEmpty(gasPrototype.GasOverlayTexture))
-                    overlay = new SpriteSpecifier.Texture(new (gasPrototype.GasOverlayTexture));
+                    overlay = new SpriteSpecifier.Texture(new(gasPrototype.GasOverlayTexture));
                 else
                     continue;
 
@@ -160,7 +160,7 @@ namespace Content.Client.Atmos.Overlays
                 overlayQuery,
                 xformQuery);
 
-            var mapUid = _mapManager.GetMapEntityId(args.MapId);
+            var mapUid = _mapManager.GetMap(args.MapId);
 
             if (_entManager.TryGetComponent<MapAtmosphereComponent>(mapUid, out var atmos))
                 DrawMapOverlay(drawHandle, args, mapUid, atmos);
@@ -184,9 +184,9 @@ namespace Content.Client.Atmos.Overlays
                 {
                     if (!state.overlayQuery.TryGetComponent(uid, out var comp) ||
                         !state.xformQuery.TryGetComponent(uid, out var gridXform))
-                        {
-                            return true;
-                        }
+                    {
+                        return true;
+                    }
 
                     var (_, _, worldMatrix, invMatrix) = gridXform.GetWorldPositionRotationMatrixWithInv();
                     state.drawHandle.SetTransform(worldMatrix);

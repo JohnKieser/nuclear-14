@@ -32,14 +32,14 @@ namespace Content.Shared.Maps
         /// <summary>
         ///     Attempts to get the turf at a certain coordinates or null if no such turf is found.
         /// </summary>
-        public static TileRef? GetTileRef(this EntityCoordinates coordinates, IEntityManager? entityManager = null, IMapManager? mapManager = null)
+        public static TileRef? GetTileRef(this EntityCoordinates coordinates, IEntityManager? entityManager = null, SharedMapSystem? mapManager = null)
         {
             entityManager ??= IoCManager.Resolve<IEntityManager>();
 
             if (!coordinates.IsValid(entityManager))
                 return null;
 
-            mapManager ??= IoCManager.Resolve<IMapManager>();
+            mapManager ??= IoCManager.Resolve<SharedMapSystem>();
             var mapSystem = entityManager.System<SharedMapSystem>();
             var pos = coordinates.ToMap(entityManager, entityManager.System<SharedTransformSystem>());
             if (!mapManager.TryFindGridAt(pos, out var gridUid, out var grid))
@@ -51,7 +51,7 @@ namespace Content.Shared.Maps
             return tile;
         }
 
-        public static bool TryGetTileRef(this EntityCoordinates coordinates, [NotNullWhen(true)] out TileRef? turf, IEntityManager? entityManager = null, IMapManager? mapManager = null)
+        public static bool TryGetTileRef(this EntityCoordinates coordinates, [NotNullWhen(true)] out TileRef? turf, IEntityManager? entityManager = null, SharedMapSystem? mapManager = null)
         {
             return (turf = coordinates.GetTileRef(entityManager, mapManager)) != null;
         }
@@ -62,7 +62,7 @@ namespace Content.Shared.Maps
         public static ContentTileDefinition GetContentTileDefinition(this Tile tile, ITileDefinitionManager? tileDefinitionManager = null)
         {
             tileDefinitionManager ??= IoCManager.Resolve<ITileDefinitionManager>();
-            return (ContentTileDefinition)tileDefinitionManager[tile.TypeId];
+            return (ContentTileDefinition) tileDefinitionManager[tile.TypeId];
         }
 
         /// <summary>

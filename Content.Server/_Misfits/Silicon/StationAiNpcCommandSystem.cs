@@ -46,7 +46,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
     [Dependency] private readonly HTNSystem _htn = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedPowerReceiverSystem _power = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -245,7 +245,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
     private void OnZaxDamaged(Entity<ZaxUnitComponent> ent, ref DamageChangedEvent args)
     {
         if (!args.DamageIncreased ||
-            args.Origin is not {} attacker ||
+            args.Origin is not { } attacker ||
             attacker == ent.Owner ||
             Deleted(attacker) ||
             !HasComp<MobStateComponent>(attacker) ||
@@ -593,8 +593,9 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
 
     private EntityCoordinates OffsetTargetInMap(EntityCoordinates target, Vector2 offset)
     {
-        var mapTarget = target.ToMap(EntityManager, _transform);
-        return EntityCoordinates.FromMap(_mapManager, new MapCoordinates(mapTarget.Position + offset, mapTarget.MapId));
+        var mapTarget = _transform.ToMapCoordinates(target);
+        return _transform.ToCoordinates(target.EntityId, new MapCoordinates(mapTarget.Position + offset, mapTarget.MapId));
+        // return EntityCoordinates.FromMap(target.EntityId, new MapCoordinates(mapTarget.Position + offset, mapTarget.MapId), _transform);
     }
 
     private bool ValidateAi(EntityUid uid)
@@ -788,7 +789,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         }
 
         if (!TryComp(uid, out StationAiCommandedNpcComponent? commanded) ||
-            commanded.ForcedHostile is not {} hostile)
+            commanded.ForcedHostile is not { } hostile)
         {
             return;
         }

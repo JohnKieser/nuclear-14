@@ -58,7 +58,7 @@ namespace Content.Shared.Interaction
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly INetManager _net = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedMapSystem _mapManager = default!;
         [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
         [Dependency] private readonly ActionBlockerSystem _actionBlockerSystem = default!;
         [Dependency] private readonly RotateToFaceSystem _rotateToFaceSystem = default!;
@@ -1191,7 +1191,7 @@ namespace Content.Shared.Interaction
                 return false;
 
             // Goobstation [
-            var useAttemptEv = new UseInHandAttemptEvent(user); 
+            var useAttemptEv = new UseInHandAttemptEvent(user);
             RaiseLocalEvent(used, useAttemptEv);
 
             if (useAttemptEv.Cancelled)
@@ -1394,7 +1394,7 @@ namespace Content.Shared.Interaction
                 return;
 
             if (!TryComp(uidB, out MetaDataComponent? metaB) || metaB.EntityPaused)
-                return ;
+                return;
 
             // TODO Struct event
             var ev = new ContactInteractionEvent(uidB.Value);
