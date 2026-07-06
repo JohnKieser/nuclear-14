@@ -299,7 +299,7 @@ public sealed partial class AdminVerbSystem
                     Text = "Refill Internals Nitrogen",
                     Category = VerbCategory.Tricks,
                     Icon = new SpriteSpecifier.Rsi(new("/Textures/Objects/Tanks/red.rsi"), "icon"),
-                    Act = () =>RefillEquippedTanks(args.User, Gas.Nitrogen),
+                    Act = () => RefillEquippedTanks(args.User, Gas.Nitrogen),
                     Impact = LogImpact.Extreme,
                     Message = Loc.GetString("admin-trick-internals-refill-nitrogen-description"),
                     Priority = (int) TricksVerbPriorities.RefillNitrogen,
@@ -638,7 +638,8 @@ public sealed partial class AdminVerbSystem
         {
             if (_adminManager.HasAdminFlag(player, AdminFlags.Mapping))
             {
-                if (_mapManager.IsMapPaused(map.MapId))
+
+                if (_mapManager.IsPaused(map.MapId))
                 {
                     Verb unpauseMap = new()
                     {
@@ -647,7 +648,7 @@ public sealed partial class AdminVerbSystem
                         Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/AdminActions/play.png")),
                         Act = () =>
                         {
-                            _mapManager.SetMapPaused(map.MapId, false);
+                            _mapManager.SetPaused(map.MapId, false);
                         },
                         Impact = LogImpact.Extreme,
                         Message = Loc.GetString("admin-trick-unpause-map-description"),
@@ -664,7 +665,7 @@ public sealed partial class AdminVerbSystem
                         Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/AdminActions/pause.png")),
                         Act = () =>
                         {
-                            _mapManager.SetMapPaused(map.MapId, true);
+                            _mapManager.SetPaused(map.MapId, true);
                         },
                         Impact = LogImpact.Extreme,
                         Message = Loc.GetString("admin-trick-pause-map-description"),

@@ -36,8 +36,10 @@
     - ActionStationAiClearNpcSelection
     - ActionStationAiMoveNpcs
     - ActionStationAiFormationMoveNpcs
+    - ActionStationAiMoveAndAttackNpcs
     - ActionStationAiEngageNpcs
     - ActionStationAiHoldNpcs
+    - ActionStationAiHackCamera
   - type: UserInterface
     interfaces:
       enum.RadarConsoleUiKey.Key:

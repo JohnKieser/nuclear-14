@@ -50,10 +50,19 @@
   id: BOSElder
   name: id-card-access-level-bos-elder
 
+- type: accessLevel
+  id: BOSOffDuty
+  name: id-card-access-level-bos
+
 - type: accessGroup
   id: BOS
   tags:
   - BOS
+
+- type: accessGroup
+  id: BOSOffDuty
+  tags:
+  - BOSOffDuty
 
 - type: accessGroup
   id: BOSInitiate

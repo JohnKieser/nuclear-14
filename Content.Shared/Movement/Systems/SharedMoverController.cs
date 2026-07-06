@@ -36,33 +36,35 @@ namespace Content.Shared.Movement.Systems
     /// </summary>
     public abstract partial class SharedMoverController : VirtualController
     {
-        [Dependency] private   readonly AlertsSystem _alerts = default!;
-        [Dependency] private   readonly IConfigurationManager _configManager = default!;
+        [Dependency] private readonly AlertsSystem _alerts = default!;
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] protected readonly IGameTiming Timing = default!;
-        [Dependency] private   readonly IMapManager _mapManager = default!;
-        [Dependency] private   readonly ITileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private   readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private   readonly InventorySystem _inventory = default!;
-        [Dependency] private   readonly MobStateSystem _mobState = default!;
-        [Dependency] private   readonly SharedAudioSystem _audio = default!;
-        [Dependency] private   readonly SharedContainerSystem _container = default!;
-        [Dependency] private   readonly SharedMapSystem _mapSystem = default!;
-        [Dependency] private   readonly SharedGravitySystem _gravity = default!;
+        [Dependency] private readonly SharedMapSystem _mapManager = default!;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly InventorySystem _inventory = default!;
+        [Dependency] private readonly MobStateSystem _mobState = default!;
+        [Dependency] private readonly SharedAudioSystem _audio = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
+        [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+        [Dependency] private readonly SharedGravitySystem _gravity = default!;
         [Dependency] protected readonly SharedPhysicsSystem Physics = default!;
-        [Dependency] private   readonly SharedTransformSystem _transform = default!;
-        [Dependency] private   readonly TagSystem _tags = default!;
-        [Dependency] private   readonly IEntityManager _entities = default!; // Delta V-NoShoesSilentFootstepsComponent
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly TagSystem _tags = default!;
+        [Dependency] private readonly IEntityManager _entities = default!; // Delta V-NoShoesSilentFootstepsComponent
 
-        protected EntityQuery<InputMoverComponent> MoverQuery;
-        protected EntityQuery<MobMoverComponent> MobMoverQuery;
-        protected EntityQuery<MovementRelayTargetComponent> RelayTargetQuery;
-        protected EntityQuery<MovementSpeedModifierComponent> ModifierQuery;
-        protected EntityQuery<PhysicsComponent> PhysicsQuery;
-        protected EntityQuery<RelayInputMoverComponent> RelayQuery;
-        protected EntityQuery<PullableComponent> PullableQuery;
-        protected EntityQuery<TransformComponent> XformQuery;
-        protected EntityQuery<CanMoveInAirComponent> CanMoveInAirQuery;
-        protected EntityQuery<NoRotateOnMoveComponent> NoRotateQuery;
+        [Dependency] protected EntityQuery<InputMoverComponent> MoverQuery;
+        [Dependency] protected EntityQuery<MapComponent> MapQuery = default!;
+        [Dependency] protected EntityQuery<MapGridComponent> MapGridQuery = default!;
+        [Dependency] protected EntityQuery<MobMoverComponent> MobMoverQuery;
+        [Dependency] protected EntityQuery<MovementRelayTargetComponent> RelayTargetQuery;
+        [Dependency] protected EntityQuery<MovementSpeedModifierComponent> ModifierQuery;
+        [Dependency] protected EntityQuery<PhysicsComponent> PhysicsQuery;
+        [Dependency] protected EntityQuery<RelayInputMoverComponent> RelayQuery;
+        [Dependency] protected EntityQuery<PullableComponent> PullableQuery;
+        [Dependency] protected EntityQuery<TransformComponent> XformQuery;
+        [Dependency] protected EntityQuery<CanMoveInAirComponent> CanMoveInAirQuery;
+        [Dependency] protected EntityQuery<NoRotateOnMoveComponent> NoRotateQuery;
 
         /// <summary>
         /// <see cref="CCVars.StopSpeed"/>

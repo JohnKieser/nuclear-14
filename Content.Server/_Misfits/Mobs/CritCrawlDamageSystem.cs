@@ -5,10 +5,13 @@ using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
+using Content.Shared._Misfits.C27;
+using Content.Shared.Silicon.Components;
 using Content.Shared.Standing;
 using Content.Shared.Stunnable;
 using Robust.Shared.Configuration;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Player;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
@@ -57,6 +60,15 @@ public sealed class CritCrawlDamageSystem : EntitySystem
 
             // Must be downed (crawling) to take damage
             if (!_standing.IsDown(uid))
+                continue;
+
+            // Only players can crit crawl, NPCs (no ActorComponent etc) don't
+            if (!HasComp<ActorComponent>(uid))
+                continue;
+
+            // Robots/silicons/C27s never crit crawl here
+            if (HasComp<SiliconComponent>(uid)
+                || HasComp<MisfitsC27Component>(uid))
                 continue;
 
             // Must actually be moving

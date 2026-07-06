@@ -21,7 +21,7 @@ public sealed partial class StencilOverlay : Overlay
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     private readonly ParallaxSystem _parallax;
     private readonly SharedTransformSystem _transform;
@@ -34,6 +34,12 @@ public sealed partial class StencilOverlay : Overlay
 
     private readonly ShaderInstance _shader;
     private readonly ShaderInstance _weatherDrawShader;
+
+    // #Misfits Fix - Stencil mask throttle: only rebuild the roofed-tile stencil
+    // mask at 4 Hz instead of every frame. The mask changes slowly (only when
+    // tiles/roofs change or camera moves), so per-frame rebuilds were wasteful.
+    private float _stencilAccum;
+    private Vector2 _lastStencilEyePos;
 
     public StencilOverlay(ParallaxSystem parallax, SharedTransformSystem transform, SpriteSystem sprite, WeatherSystem weather)
     {
@@ -49,7 +55,7 @@ public sealed partial class StencilOverlay : Overlay
 
     protected override void Draw(in OverlayDrawArgs args)
     {
-        var mapUid = _mapManager.GetMapEntityId(args.MapId);
+        var mapUid = _mapManager.GetMap(args.MapId);
         var invMatrix = args.Viewport.GetWorldToLocalMatrix();
 
         if (_blep?.Texture.Size != args.Viewport.Size)

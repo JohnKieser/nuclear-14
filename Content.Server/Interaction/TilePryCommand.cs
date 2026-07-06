@@ -21,7 +21,7 @@ namespace Content.Server.Interaction
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player;
-            if (player?.AttachedEntity is not {} attached)
+            if (player?.AttachedEntity is not { } attached)
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace Content.Server.Interaction
                 return;
             }
 
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapManager = IoCManager.Resolve<SharedMapSystem>();
             var mapSystem = _entities.System<SharedMapSystem>();
             var xform = _entities.GetComponent<TransformComponent>(attached);
             var playerGrid = xform.GridUid;

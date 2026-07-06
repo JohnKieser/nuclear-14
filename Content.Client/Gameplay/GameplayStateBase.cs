@@ -36,7 +36,7 @@ namespace Content.Client.Gameplay
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedMapSystem _mapManager = default!;
         [Dependency] protected readonly IUserInterfaceManager UserInterfaceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IViewVariablesManager _vvm = default!;
@@ -147,7 +147,7 @@ namespace Content.Client.Gameplay
             foreach (var entity in entities)
             {
                 if (clickQuery.TryGetComponent(entity.Uid, out var component) &&
-                    clickables.CheckClick((entity.Uid, component, entity.Component, entity.Transform), coordinates.Position, eye,  out var drawDepthClicked, out var renderOrder, out var bottom))
+                    clickables.CheckClick((entity.Uid, component, entity.Component, entity.Transform), coordinates.Position, eye, out var drawDepthClicked, out var renderOrder, out var bottom))
                 {
                     foundEntities.Add((entity.Uid, drawDepthClicked, renderOrder, bottom));
                 }
@@ -198,7 +198,7 @@ namespace Content.Client.Gameplay
         protected virtual void OnKeyBindStateChanged(ViewportBoundKeyEventArgs args)
         {
             // If there is no InputSystem, then there is nothing to forward to, and nothing to do here.
-            if(!_entitySystemManager.TryGetEntitySystem(out InputSystem? inputSys))
+            if (!_entitySystemManager.TryGetEntitySystem(out InputSystem? inputSys))
                 return;
 
             var kArgs = args.KeyEventArgs;
@@ -210,6 +210,11 @@ namespace Content.Client.Gameplay
             if (args.Viewport is IViewportControl vp)
             {
                 var mousePosWorld = vp.PixelToMap(kArgs.PointerLocation.Position);
+                if (mousePosWorld.MapId == MapId.Nullspace)
+                {
+                    kArgs.Handle();
+                    return;
+                }
 
                 if (vp is ScalingViewport svp)
                 {
@@ -222,7 +227,7 @@ namespace Content.Client.Gameplay
 
                 coordinates = _mapManager.TryFindGridAt(mousePosWorld, out var gridUid, out var grid) ?
                     _entitySystemManager.GetEntitySystem<SharedMapSystem>().MapToGrid(gridUid, mousePosWorld) :
-                    EntityCoordinates.FromMap(_mapManager, mousePosWorld);
+                    _entitySystemManager.GetEntitySystem<SharedTransformSystem>().ToCoordinates(gridUid, mousePosWorld);
             }
 
             var message = new ClientFullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId)

@@ -25,7 +25,7 @@ public sealed class EntityStorageSystem : SharedEntityStorageSystem
 {
     [Dependency] private readonly ConstructionSystem _construction = default!;
     [Dependency] private readonly AtmosphereSystem _atmos = default!;
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly MapSystem _mapSystem = default!;
 
     public override void Initialize()
@@ -115,7 +115,7 @@ public sealed class EntityStorageSystem : SharedEntityStorageSystem
         var serverComp = (EntityStorageComponent) component;
         var tile = GetOffsetTileRef(uid, serverComp);
 
-        if (tile != null && _atmos.GetTileMixture(tile.Value.GridUid, null, tile.Value.GridIndices, true) is {} environment)
+        if (tile != null && _atmos.GetTileMixture(tile.Value.GridUid, null, tile.Value.GridIndices, true) is { } environment)
         {
             _atmos.Merge(serverComp.Air, environment.RemoveVolume(serverComp.Air.Volume));
         }
@@ -130,7 +130,7 @@ public sealed class EntityStorageSystem : SharedEntityStorageSystem
 
         var tile = GetOffsetTileRef(uid, serverComp);
 
-        if (tile != null && _atmos.GetTileMixture(tile.Value.GridUid, null, tile.Value.GridIndices, true) is {} environment)
+        if (tile != null && _atmos.GetTileMixture(tile.Value.GridUid, null, tile.Value.GridIndices, true) is { } environment)
         {
             _atmos.Merge(environment, serverComp.Air);
             serverComp.Air.Clear();

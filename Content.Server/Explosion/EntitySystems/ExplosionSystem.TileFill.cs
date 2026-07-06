@@ -7,6 +7,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server.Explosion.EntitySystems;
 
@@ -132,7 +133,7 @@ public sealed partial class ExplosionSystem : EntitySystem
 
         // These variables keep track of the total intensity we have distributed
         List<int> tilesInIteration = new() { 1 };
-        List<float> iterationIntensity = new() {stepSize};
+        List<float> iterationIntensity = new() { stepSize };
         var totalTiles = 1;
         var remainingIntensity = totalIntensity - stepSize;
 
@@ -276,8 +277,21 @@ public sealed partial class ExplosionSystem : EntitySystem
 
         // First attempt to find a grid that is relatively close to the explosion's center. Instead of looking in a
         // diameter x diameter sized box, use a smaller box with radius sized sides:
-        var box = Box2.CenteredAround(epicenter.Position, new Vector2(radius, radius));
 
+
+        var box = Box2.CenteredAround(epicenter.Position, new Vector2(radius, radius));
+        GridCallback gridPhysicsCallback = delegate (EntityUid gridUid, MapGridComponent gridComp)
+        {
+            if (TryComp(gridUid, out PhysicsComponent? physics) && physics.Mass > mass)
+            {
+                mass = physics.Mass;
+                referenceGrid = gridUid;
+                return true;
+            }
+            return false;
+        };
+        _mapManager.FindGridsIntersecting(epicenter.MapId, box, gridPhysicsCallback);
+        /*
         foreach (var grid in _mapManager.FindGridsIntersecting(epicenter.MapId, box))
         {
             if (TryComp(grid.Owner, out PhysicsComponent? physics) && physics.Mass > mass)
@@ -286,6 +300,7 @@ public sealed partial class ExplosionSystem : EntitySystem
                 referenceGrid = grid.Owner;
             }
         }
+        */
 
         // Next, we use a much larger lookup to determine all grids relevant to the explosion. This is used to determine
         // what grids should be included during the grid-edge transformation steps. This means that if a grid is not in
@@ -295,15 +310,28 @@ public sealed partial class ExplosionSystem : EntitySystem
         // tunnel) may travel further away from the epicenter. But this should be very rare for space-traversing
         // explosions. So instead of using the largest possible distance that an explosion could theoretically travel
         // and using that for the grid look-up, we will just arbitrarily fudge the lookup size to be twice the diameter.
+        List<EntityUid> grids = new List<EntityUid>();
+        GridCallback gridListCallback = delegate (EntityUid gridUid, MapGridComponent gridComp)
+        {
+            grids.Append(gridUid);
+            return true;
+        };
 
         radius *= 4;
         box = Box2.CenteredAround(epicenter.Position, new Vector2(radius, radius));
-        var mapGrids = _mapManager.FindGridsIntersecting(epicenter.MapId, box).ToList();
-        var grids = mapGrids.Select(x => x.Owner).ToList();
+        _mapManager.FindGridsIntersecting(epicenter.MapId, box, gridListCallback);
+
 
         if (referenceGrid != null)
             return (grids, referenceGrid, radius);
-
+        // We still don't have are reference grid. So lets also look in the enlarged region
+        if (grids.TryFirstOrNull(out var gridUid) &&
+            TryComp(gridUid, out PhysicsComponent? physics) && physics.Mass > mass)
+        {
+            mass = physics.Mass;
+            referenceGrid = gridUid;
+        }
+        /*
         // We still don't have are reference grid. So lets also look in the enlarged region
         foreach (var grid in mapGrids)
         {
@@ -313,7 +341,7 @@ public sealed partial class ExplosionSystem : EntitySystem
                 referenceGrid = grid.Owner;
             }
         }
-
+        */
         return (grids, referenceGrid, radius);
     }
 

@@ -18,7 +18,7 @@ namespace Content.Server.Atmos.EntitySystems
     public sealed class AtmosDebugOverlaySystem : SharedAtmosDebugOverlaySystem
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedMapSystem _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly MapSystem _mapSystem = default!;
@@ -131,7 +131,7 @@ namespace Content.Server.Atmos.EntitySystems
             // Afterwards we reset all the chunk data for the next time we tick.
             foreach (var session in _playerObservers)
             {
-                if (session.AttachedEntity is not {Valid: true} entity)
+                if (session.AttachedEntity is not { Valid: true } entity)
                     continue;
 
                 var transform = Transform(entity);

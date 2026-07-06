@@ -38,7 +38,7 @@ namespace Content.Server.Electrocution;
 public sealed class ElectrocutionSystem : SharedElectrocutionSystem
 {
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
@@ -303,8 +303,8 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
             return false;
 
         RaiseLocalEvent(uid, new ElectrocutedEvent(uid, sourceUid, siemensCoefficient, shockDamage), true);
-            return true;
-        }
+        return true;
+    }
 
     private bool TryDoElectrocutionPowered(
         EntityUid uid,

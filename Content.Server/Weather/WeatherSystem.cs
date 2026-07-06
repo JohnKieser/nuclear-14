@@ -27,7 +27,7 @@ public sealed class WeatherSystem : SharedWeatherSystem
     [Dependency] private readonly IConfigurationManager _config = default!;
     [Dependency] private readonly IConsoleHost _console = default!;
     [Dependency] private readonly ChatSystem _chat = default!;
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly RadiationSystem _radiation = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
@@ -36,12 +36,14 @@ public sealed class WeatherSystem : SharedWeatherSystem
 
     private const float WeatherEffectInterval = 1f;
     private const string DefaultWeatherPrototype = "Default";
-    private static readonly TimeSpan RandomWeatherMinDelay = TimeSpan.FromMinutes(20);
-    private static readonly TimeSpan RandomWeatherMaxDelay = TimeSpan.FromMinutes(30);
+    // #Misfits Fix - Reverted from 20/30 min delay and 4/8 min radioactive; was causing
+    // too-frequent weather events which amplified stencil rendering + NPC visibility costs.
+    private static readonly TimeSpan RandomWeatherMinDelay = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan RandomWeatherMaxDelay = TimeSpan.FromMinutes(60);
     private static readonly TimeSpan RandomWeatherMinDuration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan RandomWeatherMaxDuration = TimeSpan.FromMinutes(10);
-    private static readonly TimeSpan RandomRadioactiveWeatherMinDuration = TimeSpan.FromMinutes(4);
-    private static readonly TimeSpan RandomRadioactiveWeatherMaxDuration = TimeSpan.FromMinutes(8);
+    private static readonly TimeSpan RandomRadioactiveWeatherMinDuration = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan RandomRadioactiveWeatherMaxDuration = TimeSpan.FromMinutes(3);
 
     private readonly Dictionary<(EntityUid MapUid, string ProtoId), float> _effectAccumulators = new();
     private TimeSpan? _nextRandomWeatherTime;
@@ -379,7 +381,8 @@ public sealed class WeatherSystem : SharedWeatherSystem
     private (WeatherPrototype?, MapId) SetRandomWeather()
     {
         var weather = RandomWeather();
-        if (weather != null) {
+        if (weather != null)
+        {
             MapId map = GetMainMap();
             SetWeather(map, weather, GetRandomWeatherEndTime(weather));
             return (weather, map);

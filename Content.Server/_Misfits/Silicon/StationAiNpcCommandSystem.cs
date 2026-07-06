@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Numerics;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
+using Content.Shared._Misfits.C27;
 using Content.Shared._Misfits.Silicon;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Damage;
@@ -32,10 +34,11 @@ namespace Content.Server._Misfits.Silicon;
 public sealed class StationAiNpcCommandSystem : EntitySystem
 {
     private const string MoveRoot = "StationAiOrderedMoveCompound";
+    private const string MoveAndAttackRoot = "StationAiOrderedMoveAndAttackCompound";
     private const string EngageRoot = "StationAiOrderedEngageCompound";
     private const string HoldRoot = "StationAiOrderedHoldCompound";
     private const float MoveRange = 0.75f;
-    private const float FormationSpacing = 1.25f;
+    private const float MoveRangeSquared = MoveRange * MoveRange;
 
     [Dependency] private readonly MobStateSystem _mobState = default!;
     [Dependency] private readonly NPCSystem _npc = default!;
@@ -43,7 +46,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
     [Dependency] private readonly HTNSystem _htn = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedPowerReceiverSystem _power = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -51,6 +54,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
 
     private EntityQuery<BroadphaseComponent> _broadphaseQuery;
     private EntityQuery<MapGridComponent> _gridQuery;
+    private readonly Dictionary<EntityUid, List<TrackedMoveTarget>> _activeMoveOrders = new();
 
     public override void Initialize()
     {
@@ -64,6 +68,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         SubscribeLocalEvent<StationAiNpcCommanderComponent, StationAiClearNpcSelectionActionEvent>(OnClearSelection);
         SubscribeLocalEvent<StationAiNpcCommanderComponent, StationAiMoveSelectedNpcsActionEvent>(OnMoveSelected);
         SubscribeLocalEvent<StationAiNpcCommanderComponent, StationAiFormationMoveSelectedNpcsActionEvent>(OnFormationMoveSelected);
+        SubscribeLocalEvent<StationAiNpcCommanderComponent, StationAiMoveAndAttackSelectedNpcsActionEvent>(OnMoveAndAttackSelected);
         SubscribeLocalEvent<StationAiNpcCommanderComponent, StationAiEngageSelectedNpcsActionEvent>(OnEngageSelected);
         SubscribeLocalEvent<StationAiNpcCommanderComponent, StationAiHoldSelectedNpcsActionEvent>(OnHoldSelected);
         SubscribeLocalEvent<StationAiNpcCommanderComponent, ComponentShutdown>(OnCommanderShutdown);
@@ -71,6 +76,28 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         SubscribeLocalEvent<StationAiCommandedNpcComponent, MobStateChangedEvent>(OnCommandedNpcMobStateChanged);
         SubscribeLocalEvent<StationAiCommandedNpcComponent, EntityTerminatingEvent>(OnCommandedNpcTerminating);
         SubscribeLocalEvent<StationAiCommandedNpcComponent, ComponentShutdown>(OnCommandedNpcShutdown);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (_activeMoveOrders.Count == 0)
+            return;
+
+        foreach (var (commanderUid, targets) in _activeMoveOrders.ToArray())
+        {
+            if (!TryComp(commanderUid, out StationAiNpcCommanderComponent? commander))
+            {
+                _activeMoveOrders.Remove(commanderUid);
+                continue;
+            }
+
+            if (targets.Count > 0 && !IsMoveOrderComplete(targets))
+                continue;
+
+            ClearMoveTargetState((commanderUid, commander));
+        }
     }
 
     private void OnSelectNpc(Entity<StationAiNpcCommanderComponent> ent, ref StationAiSelectNpcActionEvent args)
@@ -85,6 +112,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         if (ent.Comp.SelectedNpcs.Remove(args.Target))
         {
             RestoreNpc(args.Target, ent.Owner);
+            ClearMoveTargetState(ent);
             Dirty(ent);
             return;
         }
@@ -100,6 +128,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
 
         EnsureCommandedNpc(args.Target, ent.Owner, htn);
         ent.Comp.SelectedNpcs.Add(args.Target);
+        ClearMoveTargetState(ent);
         Dirty(ent);
     }
 
@@ -118,7 +147,36 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
             return;
 
         args.Handled = true;
-        ApplyMove(ent, args.Target, formation: false);
+
+        var selected = GetValidSelectedNpcs(ent);
+        if (selected.Count == 0)
+        {
+            ClearMoveTargetState(ent);
+            SendMoveTargetingFinished(ent.Owner);
+            return;
+        }
+
+        if (ent.Comp.PendingMoveTargets.Count >= selected.Count)
+            ent.Comp.PendingMoveTargets.Clear();
+
+        _activeMoveOrders.Remove(ent.Owner);
+        ent.Comp.PendingMoveTargets.Add(GetNetCoordinates(args.Target));
+        ent.Comp.MoveTargetPreviews.Clear();
+        ent.Comp.MoveTargetPreviews.AddRange(ent.Comp.PendingMoveTargets);
+        Dirty(ent);
+
+        if (ent.Comp.PendingMoveTargets.Count < selected.Count)
+            return;
+
+        var targets = ent.Comp.PendingMoveTargets
+            .Take(selected.Count)
+            .Select(EntityManager.GetCoordinates)
+            .ToList();
+
+        ApplyMoveTargets(ent.Owner, selected, AssignMoveTargetsByNearest(selected, targets), MoveRoot);
+        ent.Comp.PendingMoveTargets.Clear();
+        Dirty(ent);
+        SendMoveTargetingFinished(ent.Owner);
     }
 
     private void OnFormationMoveSelected(Entity<StationAiNpcCommanderComponent> ent, ref StationAiFormationMoveSelectedNpcsActionEvent args)
@@ -127,7 +185,21 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
             return;
 
         args.Handled = true;
-        ApplyMove(ent, args.Target, formation: true);
+        var selected = GetValidSelectedNpcs(ent);
+        var targets = GetFormationMoveTargets(selected, args.Target);
+
+        SetMoveTargetPreviews(ent, targets);
+        ApplyMoveTargets(ent.Owner, selected, targets, MoveRoot);
+    }
+
+    private void OnMoveAndAttackSelected(Entity<StationAiNpcCommanderComponent> ent, ref StationAiMoveAndAttackSelectedNpcsActionEvent args)
+    {
+        if (args.Handled || !ValidateAi(ent.Owner) || !CanSee(ent.Owner, args.Target))
+            return;
+
+        args.Handled = true;
+        ClearMoveTargetState(ent);
+        ApplyMove(ent, args.Target, formation: false, MoveAndAttackRoot);
     }
 
     private void OnEngageSelected(Entity<StationAiNpcCommanderComponent> ent, ref StationAiEngageSelectedNpcsActionEvent args)
@@ -142,6 +214,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         }
 
         args.Handled = true;
+        ClearMoveTargetState(ent);
         foreach (var (npc, htn) in GetValidSelectedNpcs(ent))
         {
             PrepareOrder(npc, ent.Owner, htn, EngageRoot);
@@ -159,6 +232,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
             return;
 
         args.Handled = true;
+        ClearMoveTargetState(ent);
         foreach (var (npc, htn) in GetValidSelectedNpcs(ent))
         {
             PrepareOrder(npc, ent.Owner, htn, HoldRoot);
@@ -171,7 +245,7 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
     private void OnZaxDamaged(Entity<ZaxUnitComponent> ent, ref DamageChangedEvent args)
     {
         if (!args.DamageIncreased ||
-            args.Origin is not {} attacker ||
+            args.Origin is not { } attacker ||
             attacker == ent.Owner ||
             Deleted(attacker) ||
             !HasComp<MobStateComponent>(attacker) ||
@@ -183,10 +257,22 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
             return;
         }
 
-        // [Changed by MisfitsCrew/Operator] Lets ZAX units retaliate when attacked unless the Station AI has ordered hold.
+        if (IsZaxFriendlyFire(ent.Owner, attacker))
+        {
+            ClearMutualZaxAggro(ent.Owner, attacker);
+            return;
+        }
+
+        // [Changed by MisfitsCrew/Operator] Hold order is absolute: ZAX units do not retaliate while holding.
         if (TryComp(ent.Owner, out StationAiCommandedNpcComponent? commanded) && commanded.HoldingCommand)
         {
             ClearForcedHostiles(ent.Owner, all: true);
+            return;
+        }
+
+        if (!CanZaxRetaliateAgainst(ent.Owner, attacker))
+        {
+            ClearSpecificHostile(ent.Owner, attacker);
             return;
         }
 
@@ -230,26 +316,172 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         ReleaseDeadOrDeletedNpc(ent.Owner);
     }
 
-    private void ApplyMove(Entity<StationAiNpcCommanderComponent> ent, EntityCoordinates target, bool formation)
+    private void ApplyMove(
+        Entity<StationAiNpcCommanderComponent> ent,
+        EntityCoordinates target,
+        bool formation,
+        string rootTask = MoveRoot)
     {
-        var index = 0;
         var selected = GetValidSelectedNpcs(ent);
-        var count = selected.Count;
+        var targets = formation
+            ? GetFormationMoveTargets(selected, target)
+            : Enumerable.Repeat(target, selected.Count).ToList();
 
-        foreach (var (npc, htn) in selected)
+        ApplyMoveTargets(ent.Owner, selected, targets, rootTask);
+    }
+
+    private void ApplyMoveTargets(
+        EntityUid commander,
+        List<(EntityUid Uid, HTNComponent Htn)> selected,
+        List<EntityCoordinates> targets,
+        string rootTask)
+    {
+        var activeMoveTargets = rootTask == MoveRoot
+            ? new List<TrackedMoveTarget>()
+            : null;
+
+        for (var i = 0; i < selected.Count && i < targets.Count; i++)
         {
-            var moveTarget = formation
-                ? target.Offset(GetFormationOffset(index++, count))
-                : target;
+            var (npc, htn) = selected[i];
+            var moveTarget = targets[i];
 
-            // [Changed by MisfitsCrew/Operator] Applies either direct or formation offsets as HTN follow targets for selected ZAX units.
-            PrepareOrder(npc, ent.Owner, htn, MoveRoot);
+            // [Changed by MisfitsCrew/Operator] Applies direct or preserved formation offsets as HTN follow targets for selected ZAX units.
+            PrepareOrder(npc, commander, htn, rootTask);
             ClearOrderBlackboard(htn);
+            ClearForcedHostiles(npc, all: true);
             _npc.SetBlackboard(npc, NPCBlackboard.FollowTarget, moveTarget, htn);
             _npc.SetBlackboard(npc, "FollowCloseRange", MoveRange, htn);
             _npc.SetBlackboard(npc, "FollowRange", MoveRange, htn);
             Replan(npc, htn);
+            activeMoveTargets?.Add(new TrackedMoveTarget(npc, GetNetCoordinates(moveTarget)));
         }
+
+        TrackActiveMoveOrder(commander, activeMoveTargets);
+    }
+
+    private List<EntityCoordinates> AssignMoveTargetsByNearest(
+        List<(EntityUid Uid, HTNComponent Htn)> selected,
+        List<EntityCoordinates> targets)
+    {
+        if (targets.Count == 0)
+            return new List<EntityCoordinates>();
+
+        var remaining = selected.Select((entry, index) => index).ToList();
+        var assigned = new EntityCoordinates[selected.Count];
+
+        foreach (var target in targets)
+        {
+            if (remaining.Count == 0)
+                break;
+
+            var selectedIndex = FindNearestSelectedIndex(remaining, selected, target);
+            assigned[selectedIndex] = target;
+            remaining.Remove(selectedIndex);
+        }
+
+        foreach (var index in remaining)
+            assigned[index] = targets[Math.Min(index, targets.Count - 1)];
+
+        return assigned.ToList();
+    }
+
+    private int FindNearestSelectedIndex(
+        List<int> remaining,
+        List<(EntityUid Uid, HTNComponent Htn)> selected,
+        EntityCoordinates target)
+    {
+        var targetMap = target.ToMap(EntityManager, _transform);
+        var bestIndex = remaining[0];
+        var bestDistance = float.MaxValue;
+
+        foreach (var index in remaining)
+        {
+            var npcMap = _transform.GetMapCoordinates(selected[index].Uid);
+            var distance = npcMap.MapId == targetMap.MapId
+                ? Vector2.DistanceSquared(npcMap.Position, targetMap.Position)
+                : float.MaxValue;
+
+            if (distance >= bestDistance)
+                continue;
+
+            bestDistance = distance;
+            bestIndex = index;
+        }
+
+        return bestIndex;
+    }
+
+    private void SetMoveTargetPreviews(Entity<StationAiNpcCommanderComponent> ent, List<EntityCoordinates> targets)
+    {
+        ent.Comp.PendingMoveTargets.Clear();
+        ent.Comp.MoveTargetPreviews.Clear();
+
+        foreach (var target in targets)
+            ent.Comp.MoveTargetPreviews.Add(GetNetCoordinates(target));
+
+        Dirty(ent);
+    }
+
+    private void ClearMoveTargetState(Entity<StationAiNpcCommanderComponent> ent)
+    {
+        _activeMoveOrders.Remove(ent.Owner);
+
+        if (ent.Comp.PendingMoveTargets.Count == 0 && ent.Comp.MoveTargetPreviews.Count == 0)
+            return;
+
+        ent.Comp.PendingMoveTargets.Clear();
+        ent.Comp.MoveTargetPreviews.Clear();
+        Dirty(ent);
+    }
+
+    private void TrackActiveMoveOrder(EntityUid commander, List<TrackedMoveTarget>? targets)
+    {
+        if (targets == null)
+            return;
+
+        if (targets.Count == 0)
+        {
+            if (TryComp(commander, out StationAiNpcCommanderComponent? commanderComp))
+                ClearMoveTargetState((commander, commanderComp));
+            else
+                _activeMoveOrders.Remove(commander);
+
+            return;
+        }
+
+        _activeMoveOrders[commander] = targets;
+    }
+
+    private bool IsMoveOrderComplete(List<TrackedMoveTarget> targets)
+    {
+        foreach (var target in targets)
+        {
+            if (!IsMoveTargetComplete(target))
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool IsMoveTargetComplete(TrackedMoveTarget target)
+    {
+        if (Deleted(target.Npc) ||
+            !TryComp(target.Npc, out MobStateComponent? mobState) ||
+            !_mobState.IsAlive(target.Npc, mobState))
+        {
+            return true;
+        }
+
+        var npcMap = _transform.GetMapCoordinates(target.Npc);
+        var targetMap = EntityManager.GetCoordinates(target.Target).ToMap(EntityManager, _transform);
+        return npcMap.MapId == targetMap.MapId &&
+            Vector2.DistanceSquared(npcMap.Position, targetMap.Position) <= MoveRangeSquared;
+    }
+
+    private void SendMoveTargetingFinished(EntityUid commander)
+    {
+        if (TryComp<ActorComponent>(commander, out var actor))
+            RaiseNetworkEvent(new StationAiNpcMoveTargetingFinishedEvent(), actor.PlayerSession);
     }
 
     private List<(EntityUid Uid, HTNComponent Htn)> GetValidSelectedNpcs(Entity<StationAiNpcCommanderComponent> ent)
@@ -305,6 +537,65 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         }
 
         return !TryComp(uid, out StationAiCommandedNpcComponent? commanded) || IsSameCommander(commander, commanded);
+    }
+
+    private List<EntityCoordinates> GetFormationMoveTargets(
+        List<(EntityUid Uid, HTNComponent Htn)> selected,
+        EntityCoordinates target)
+    {
+        var targets = new List<EntityCoordinates>(selected.Count);
+        var offsets = GetCurrentFormationOffsets(selected, target);
+
+        for (var i = 0; i < selected.Count && i < offsets.Count; i++)
+            targets.Add(OffsetTargetInMap(target, offsets[i]));
+
+        return targets;
+    }
+
+    private List<Vector2> GetCurrentFormationOffsets(
+        List<(EntityUid Uid, HTNComponent Htn)> selected,
+        EntityCoordinates target)
+    {
+        var offsets = new List<Vector2>(selected.Count);
+        if (selected.Count <= 1)
+        {
+            if (selected.Count == 1)
+                offsets.Add(Vector2.Zero);
+
+            return offsets;
+        }
+
+        var targetMap = target.ToMap(EntityManager, _transform);
+        var positions = new List<Vector2>(selected.Count);
+        var center = Vector2.Zero;
+
+        foreach (var (uid, _) in selected)
+        {
+            var mapCoordinates = _transform.GetMapCoordinates(uid);
+            if (mapCoordinates.MapId != targetMap.MapId)
+            {
+                positions.Add(targetMap.Position);
+                center += targetMap.Position;
+                continue;
+            }
+
+            positions.Add(mapCoordinates.Position);
+            center += mapCoordinates.Position;
+        }
+
+        center /= selected.Count;
+
+        foreach (var position in positions)
+            offsets.Add(position - center);
+
+        return offsets;
+    }
+
+    private EntityCoordinates OffsetTargetInMap(EntityCoordinates target, Vector2 offset)
+    {
+        var mapTarget = _transform.ToMapCoordinates(target);
+        return _transform.ToCoordinates(target.EntityId, new MapCoordinates(mapTarget.Position + offset, mapTarget.MapId));
+        // return EntityCoordinates.FromMap(target.EntityId, new MapCoordinates(mapTarget.Position + offset, mapTarget.MapId), _transform);
     }
 
     private bool ValidateAi(EntityUid uid)
@@ -419,7 +710,10 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         foreach (var uid in new List<EntityUid>(ent.Comp.SelectedNpcs))
             RestoreNpc(uid, ent.Owner);
 
+        _activeMoveOrders.Remove(ent.Owner);
         ent.Comp.SelectedNpcs.Clear();
+        ent.Comp.PendingMoveTargets.Clear();
+        ent.Comp.MoveTargetPreviews.Clear();
         Dirty(ent);
     }
 
@@ -495,13 +789,49 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         }
 
         if (!TryComp(uid, out StationAiCommandedNpcComponent? commanded) ||
-            commanded.ForcedHostile is not {} hostile)
+            commanded.ForcedHostile is not { } hostile)
         {
             return;
         }
 
         _npcFaction.DeAggroEntity((uid, factionException), hostile);
         commanded.ForcedHostile = null;
+    }
+
+    private bool IsZaxFriendlyFire(EntityUid uid, EntityUid attacker)
+    {
+        return HasComp<ZaxUnitComponent>(uid) && HasComp<ZaxUnitComponent>(attacker);
+    }
+
+    private bool CanZaxRetaliateAgainst(EntityUid uid, EntityUid attacker)
+    {
+        if (HasComp<ActorComponent>(attacker))
+            return true;
+
+        if (HasComp<MisfitsC27Component>(attacker) ||
+            !HasComp<NpcFactionMemberComponent>(attacker))
+        {
+            return false;
+        }
+
+        return _npcFaction.IsEntityHostile(uid, attacker);
+    }
+
+    private void ClearMutualZaxAggro(EntityUid uid, EntityUid other)
+    {
+        ClearSpecificHostile(uid, other);
+        ClearSpecificHostile(other, uid);
+    }
+
+    private void ClearSpecificHostile(EntityUid uid, EntityUid target)
+    {
+        if (!TryComp(uid, out FactionExceptionComponent? factionException))
+            return;
+
+        _npcFaction.DeAggroEntity((uid, factionException), target);
+
+        if (TryComp(uid, out StationAiCommandedNpcComponent? commanded) && commanded.ForcedHostile == target)
+            commanded.ForcedHostile = null;
     }
 
     private void ReleaseDeadOrDeletedNpc(EntityUid npc)
@@ -526,17 +856,5 @@ public sealed class StationAiNpcCommandSystem : EntitySystem
         _npc.WakeNPC(uid, htn);
     }
 
-    private static Vector2 GetFormationOffset(int index, int count)
-    {
-        if (count <= 1)
-            return Vector2.Zero;
-
-        var width = (int) MathF.Ceiling(MathF.Sqrt(count));
-        var row = index / width;
-        var column = index % width;
-        var usedInRow = Math.Min(width, count - row * width);
-        var x = (column - (usedInRow - 1) / 2f) * FormationSpacing;
-        var y = -row * FormationSpacing;
-        return new Vector2(x, y);
-    }
+    private readonly record struct TrackedMoveTarget(EntityUid Npc, NetCoordinates Target);
 }

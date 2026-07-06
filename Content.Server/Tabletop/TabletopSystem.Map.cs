@@ -47,16 +47,13 @@ namespace Content.Server.Tabletop
         {
             if (TabletopMap != MapId.Nullspace && _mapManager.MapExists(TabletopMap))
                 return;
-
-            TabletopMap = _mapManager.CreateMap();
+            var mapUID = _mapManager.CreateMap();
+            var mapComp = Comp<MapComponent>(mapUID);
+            TabletopMap = mapComp.MapId;
             _tabletops = 0;
-            var mapUid = _mapManager.GetMapEntityId(TabletopMap);
-
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapUid);
-
             // Lighting is always disabled in tabletop world.
             mapComp.LightingEnabled = false;
-            Dirty(mapUid, mapComp);
+            Dirty(mapUID, mapComp);
         }
 
         /// <summary>
@@ -66,9 +63,9 @@ namespace Content.Server.Tabletop
         /// <returns>The mapped 2D position for the scalar.</returns>
         private Vector2i UlamSpiral(int n)
         {
-            var k = (int)MathF.Ceiling(MathF.Sqrt(n) - 1) / 2;
+            var k = (int) MathF.Ceiling(MathF.Sqrt(n) - 1) / 2;
             var t = 2 * k + 1;
-            var m = (int)MathF.Pow(t, 2);
+            var m = (int) MathF.Pow(t, 2);
             t--;
 
             if (n >= m - t)

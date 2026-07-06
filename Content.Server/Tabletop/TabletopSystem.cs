@@ -19,7 +19,7 @@ namespace Content.Server.Tabletop
     [UsedImplicitly]
     public sealed partial class TabletopSystem : SharedTabletopSystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedMapSystem _mapManager = default!;
         [Dependency] private readonly EyeSystem _eye = default!;
         [Dependency] private readonly ViewSubscriberSystem _viewSubscriberSystem = default!;
         [Dependency] private readonly PopupSystem _popupSystem = default!;
@@ -132,7 +132,7 @@ namespace Content.Server.Tabletop
             var playVerb = new ActivationVerb()
             {
                 Text = Loc.GetString("tabletop-verb-play-game"),
-                Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/die.svg.192dpi.png")),
+                Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/die.svg.192dpi.png")),
                 Act = () => OpenSessionFor(actor.PlayerSession, uid)
             };
 
@@ -163,7 +163,7 @@ namespace Content.Server.Tabletop
 
         private void OnPlayerDetached(EntityUid uid, TabletopGamerComponent component, PlayerDetachedEvent args)
         {
-            if(component.Tabletop.IsValid())
+            if (component.Tabletop.IsValid())
                 CloseSessionFor(args.Player, component.Tabletop);
         }
 
@@ -172,7 +172,7 @@ namespace Content.Server.Tabletop
             if (!EntityManager.TryGetComponent(uid, out ActorComponent? actor))
                 return;
 
-            if(component.Tabletop.IsValid())
+            if (component.Tabletop.IsValid())
                 CloseSessionFor(actor.PlayerSession, component.Tabletop);
         }
 

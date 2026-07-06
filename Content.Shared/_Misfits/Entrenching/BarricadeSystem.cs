@@ -8,8 +8,6 @@ using Content.Shared.Maps;
 using Content.Shared.Popups;
 using Content.Shared.Stacks;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
-using Robust.Shared.Player;
 
 namespace Content.Shared._Misfits.Entrenching;
 
@@ -19,7 +17,7 @@ public abstract class SharedBarricadeSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedTransformSystem _xform = default!;
     [Dependency] private readonly SharedStackSystem _stack = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
 
     public override void Initialize()
     {
@@ -219,6 +217,7 @@ public abstract class SharedBarricadeSystem : EntitySystem
 
     private bool TryGetSurdyTile(EntityCoordinates coordinates, out TileRef tile)
     {
+
         var tileRef = coordinates.GetTileRef(EntityManager, _mapManager);
         if (tileRef == null || tileRef.Value.IsSpace() || !tileRef.Value.Tile.GetContentTileDefinition().Sturdy)
         {

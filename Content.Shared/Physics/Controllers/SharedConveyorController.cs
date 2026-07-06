@@ -16,7 +16,7 @@ namespace Content.Shared.Physics.Controllers;
 
 public abstract class SharedConveyorController : VirtualController
 {
-    [Dependency] protected readonly IMapManager MapManager = default!;
+    [Dependency] protected readonly SharedMapSystem MapManager = default!;
     [Dependency] protected readonly EntityLookupSystem Lookup = default!;
     [Dependency] protected readonly SharedMapSystem MapSystem = default!;
     [Dependency] protected readonly SharedPhysicsSystem Physics = default!;
@@ -138,7 +138,7 @@ public abstract class SharedConveyorController : VirtualController
             // Give a slight nudge in the direction of the conveyor to prevent
             // to collidable objects (e.g. crates) on the locker from getting stuck
             // pushing each other when rounding a corner.
-            var velocity = (r + direction*0.2f).Normalized() * speed;
+            var velocity = (r + direction * 0.2f).Normalized() * speed;
             return velocity * frameTime;
         }
     }

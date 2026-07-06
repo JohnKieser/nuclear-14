@@ -210,7 +210,7 @@
   physicalDesc: reagent-physical-desc-thick
   plantMetabolism:
   - !type:PlantAdjustNutrition
-    amount: 3
+    amount: 5
   - !type:PlantAdjustPests
     amount: -1
   - !type:PlantAdjustHealth

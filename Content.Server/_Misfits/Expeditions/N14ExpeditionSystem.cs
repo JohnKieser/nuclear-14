@@ -47,7 +47,7 @@ public sealed class N14ExpeditionSystem : EntitySystem
     [Dependency] private readonly AtmosphereSystem _atmosphere = default!; // #Misfits Add - set static breathable air on procedural maps
     [Dependency] private readonly GravitySystem _gravity = default!;
     [Dependency] private readonly DungeonSystem _dungeon = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
     [Dependency] private readonly NpcFactionSystem _factions = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
@@ -110,91 +110,91 @@ public sealed class N14ExpeditionSystem : EntitySystem
         {
             _sessionScanAccumulator = 0f;
             var expQuery = EntityQueryEnumerator<N14ExpeditionComponent>();
-        while (expQuery.MoveNext(out var mapUid, out var expedition))
-        {
-            // Check each session's timer independently
-            for (var i = expedition.Sessions.Count - 1; i >= 0; i--)
+            while (expQuery.MoveNext(out var mapUid, out var expedition))
             {
-                var session = expedition.Sessions[i];
-                if (session.Finished)
-                    continue;
-
-                var remaining = session.EndTime - now;
-
-                // Chat-based time announcements at every 10-minute interval.
-                var remainingMinutes = (int) remaining.TotalMinutes;
-                if (remainingMinutes > 0
-                    && remainingMinutes % 10 == 0
-                    && session.LastChatWarningMinutes != remainingMinutes)
+                // Check each session's timer independently
+                for (var i = expedition.Sessions.Count - 1; i >= 0; i--)
                 {
-                    session.LastChatWarningMinutes = remainingMinutes;
-                    ChatAnnounceToSession(mapUid, session,
-                        Loc.GetString("n14-expedition-chat-time",
-                            ("minutes", remainingMinutes)));
-                }
-
-                // 5-minute warning (popup + chat)
-                if (!session.Warned5Min && remaining <= TimeSpan.FromMinutes(5))
-                {
-                    session.Warned5Min = true;
-                    var msg = Loc.GetString("n14-expedition-warning-5min");
-                    AnnounceToSession(mapUid, session, msg);
-                    ChatAnnounceToSession(mapUid, session, msg);
-                }
-
-                // 1-minute warning (popup + chat)
-                if (!session.Warned1Min && remaining <= TimeSpan.FromMinutes(1))
-                {
-                    session.Warned1Min = true;
-                    var msg = Loc.GetString("n14-expedition-warning-1min");
-                    AnnounceToSession(mapUid, session, msg);
-                    ChatAnnounceToSession(mapUid, session, msg);
-                }
-
-                // 30-second final warning (popup + chat)
-                if (!session.Warned30Sec && remaining <= TimeSpan.FromSeconds(30))
-                {
-                    session.Warned30Sec = true;
-                    var msg = Loc.GetString("n14-expedition-warning-30sec");
-                    AnnounceToSession(mapUid, session, msg);
-                    ChatAnnounceToSession(mapUid, session, msg);
-                }
-
-                // Time's up for this session — force extract only this group
-                if (remaining <= TimeSpan.Zero)
-                {
-                    EndSession(mapUid, expedition, session);
-                }
-            }
-
-            // If all sessions are finished, check if any players remain on the map.
-            // If not, delete the map (it's orphaned).
-            if (expedition.Sessions.All(s => s.Finished))
-            {
-                var mapXform = Transform(mapUid);
-                var hasPlayers = false;
-
-                // #Misfits Fix - scoped player check instead of full-server mob scan
-                // Previously used EntityQueryEnumerator<MobStateComponent> which scanned
-                // every mob on the entire server each frame — O(all mobs) lag source.
-                // Now checks only active player sessions (typically <50 entities).
-                foreach (var playerSession in _playerManager.Sessions)
-                {
-                    if (playerSession.AttachedEntity is not { } playerEnt)
+                    var session = expedition.Sessions[i];
+                    if (session.Finished)
                         continue;
-                    if (Transform(playerEnt).MapID == mapXform.MapID)
+
+                    var remaining = session.EndTime - now;
+
+                    // Chat-based time announcements at every 10-minute interval.
+                    var remainingMinutes = (int) remaining.TotalMinutes;
+                    if (remainingMinutes > 0
+                        && remainingMinutes % 10 == 0
+                        && session.LastChatWarningMinutes != remainingMinutes)
                     {
-                        hasPlayers = true;
-                        break;
+                        session.LastChatWarningMinutes = remainingMinutes;
+                        ChatAnnounceToSession(mapUid, session,
+                            Loc.GetString("n14-expedition-chat-time",
+                                ("minutes", remainingMinutes)));
+                    }
+
+                    // 5-minute warning (popup + chat)
+                    if (!session.Warned5Min && remaining <= TimeSpan.FromMinutes(5))
+                    {
+                        session.Warned5Min = true;
+                        var msg = Loc.GetString("n14-expedition-warning-5min");
+                        AnnounceToSession(mapUid, session, msg);
+                        ChatAnnounceToSession(mapUid, session, msg);
+                    }
+
+                    // 1-minute warning (popup + chat)
+                    if (!session.Warned1Min && remaining <= TimeSpan.FromMinutes(1))
+                    {
+                        session.Warned1Min = true;
+                        var msg = Loc.GetString("n14-expedition-warning-1min");
+                        AnnounceToSession(mapUid, session, msg);
+                        ChatAnnounceToSession(mapUid, session, msg);
+                    }
+
+                    // 30-second final warning (popup + chat)
+                    if (!session.Warned30Sec && remaining <= TimeSpan.FromSeconds(30))
+                    {
+                        session.Warned30Sec = true;
+                        var msg = Loc.GetString("n14-expedition-warning-30sec");
+                        AnnounceToSession(mapUid, session, msg);
+                        ChatAnnounceToSession(mapUid, session, msg);
+                    }
+
+                    // Time's up for this session — force extract only this group
+                    if (remaining <= TimeSpan.Zero)
+                    {
+                        EndSession(mapUid, expedition, session);
                     }
                 }
 
-                if (!hasPlayers)
+                // If all sessions are finished, check if any players remain on the map.
+                // If not, delete the map (it's orphaned).
+                if (expedition.Sessions.All(s => s.Finished))
                 {
-                    QueueDel(mapUid);
+                    var mapXform = Transform(mapUid);
+                    var hasPlayers = false;
+
+                    // #Misfits Fix - scoped player check instead of full-server mob scan
+                    // Previously used EntityQueryEnumerator<MobStateComponent> which scanned
+                    // every mob on the entire server each frame — O(all mobs) lag source.
+                    // Now checks only active player sessions (typically <50 entities).
+                    foreach (var playerSession in _playerManager.Sessions)
+                    {
+                        if (playerSession.AttachedEntity is not { } playerEnt)
+                            continue;
+                        if (Transform(playerEnt).MapID == mapXform.MapID)
+                        {
+                            hasPlayers = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasPlayers)
+                    {
+                        QueueDel(mapUid);
+                    }
                 }
             }
-        }
         } // end if (_sessionScanAccumulator >= SessionScanInterval)
 
         // --- Process exit-zone extraction countdowns (multi-session aware) ---
@@ -433,14 +433,14 @@ public sealed class N14ExpeditionSystem : EntitySystem
                 // Build generation parameters from the map entry data fields
                 genParams = new UndergroundGenParams
                 {
-                    Seed               = runtimeSeed,
-                    Theme              = mapEntry.ProceduralTheme.Value,
-                    GridWidth          = mapEntry.ProceduralGridSize,
-                    GridHeight         = mapEntry.ProceduralGridSize,
-                    DifficultyTier     = mapEntry.ProceduralDifficultyTier,
-                    MinRooms           = mapEntry.ProceduralMinRooms,
-                    MaxRooms           = mapEntry.ProceduralMaxRooms,
-                    HubCount           = mapEntry.ProceduralHubCount,
+                    Seed = runtimeSeed,
+                    Theme = mapEntry.ProceduralTheme.Value,
+                    GridWidth = mapEntry.ProceduralGridSize,
+                    GridHeight = mapEntry.ProceduralGridSize,
+                    DifficultyTier = mapEntry.ProceduralDifficultyTier,
+                    MinRooms = mapEntry.ProceduralMinRooms,
+                    MaxRooms = mapEntry.ProceduralMaxRooms,
+                    HubCount = mapEntry.ProceduralHubCount,
                     FactionSpawnGroups = mapEntry.FactionSpawns ?? new System.Collections.Generic.List<N14FactionSpawnGroup>(),
                     // #Misfits Add - Forward YAML-pinned environmental states to the generator
                     EnvironmentalStates = mapEntry.ProceduralEnvironmentalStates,

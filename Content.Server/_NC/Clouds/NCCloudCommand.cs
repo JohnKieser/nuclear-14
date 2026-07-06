@@ -14,7 +14,7 @@ namespace Content.Server._NC.Clouds;
 public sealed class NCCloudCommand : IConsoleCommand
 {
     [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
 
     public string Command => "nccloud";
 
@@ -29,7 +29,7 @@ public sealed class NCCloudCommand : IConsoleCommand
             case 1:
                 return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-nccloud-hint-map"));
             case 2:
-                return CompletionResult.FromHintOptions(new[] {"start", "stop"}, Loc.GetString("cmd-nccloud-hint-action"));
+                return CompletionResult.FromHintOptions(new[] { "start", "stop" }, Loc.GetString("cmd-nccloud-hint-action"));
             case 3:
                 if (args[1].Equals("start", StringComparison.OrdinalIgnoreCase))
                     return CompletionResult.FromHint(Loc.GetString("cmd-nccloud-hint-duration"));

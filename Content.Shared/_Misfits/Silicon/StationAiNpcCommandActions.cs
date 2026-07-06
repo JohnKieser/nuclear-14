@@ -1,4 +1,5 @@
 using Content.Shared.Actions;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._Misfits.Silicon;
 
@@ -11,6 +12,11 @@ public sealed partial class StationAiMoveSelectedNpcsActionEvent : WorldTargetAc
 
 public sealed partial class StationAiFormationMoveSelectedNpcsActionEvent : WorldTargetActionEvent;
 
+public sealed partial class StationAiMoveAndAttackSelectedNpcsActionEvent : WorldTargetActionEvent;
+
 public sealed partial class StationAiEngageSelectedNpcsActionEvent : EntityTargetActionEvent;
 
 public sealed partial class StationAiHoldSelectedNpcsActionEvent : InstantActionEvent;
+
+[Serializable, NetSerializable]
+public sealed class StationAiNpcMoveTargetingFinishedEvent : EntityEventArgs;

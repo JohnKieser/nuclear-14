@@ -16,7 +16,7 @@ namespace Content.Shared.Maps;
 /// </summary>
 public sealed class TileSystem : EntitySystem
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
     [Dependency] private readonly SharedDecalSystem _decal = default!;
@@ -93,7 +93,7 @@ public sealed class TileSystem : EntitySystem
         return PryTile(tileRef);
     }
 
-	public bool PryTile(TileRef tileRef)
+    public bool PryTile(TileRef tileRef)
     {
         return PryTile(tileRef, false);
     }

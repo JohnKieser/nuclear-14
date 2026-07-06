@@ -10,6 +10,8 @@ namespace Content.Server.Entry
             "Marker",
             "GuidebookControlsTest",
             "GuideHelp",
+            "guideEntry",
+            "latheRecipePack",
             "Clickable",
             "Icon",
             "CableVisualizer",
@@ -19,7 +21,8 @@ namespace Content.Server.Entry
             "InventorySlots",
             "LightFade",
             "HolidayRsiSwap",
-            "OptionsVisualizer"
+            "OptionsVisualizer",
+            "parallax"
         };
     }
 }

@@ -9,13 +9,13 @@ namespace Content.Server.Salvage;
 sealed class SalvageRulerCommand : IConsoleCommand
 {
     [Dependency] private readonly IEntityManager _entities = default!;
-    [Dependency] private readonly IMapManager _maps = default!;
+    [Dependency] private readonly SharedMapSystem _maps = default!;
 
     public string Command => "salvageruler";
 
     public string Description => Loc.GetString("salvage-ruler-command-description");
 
-    public string Help => Loc.GetString("salvage-ruler-command-help-text", ("command",Command));
+    public string Help => Loc.GetString("salvage-ruler-command-help-text", ("command", Command));
 
     public void Execute(IConsoleShell shell, string argStr, string[] args)
     {

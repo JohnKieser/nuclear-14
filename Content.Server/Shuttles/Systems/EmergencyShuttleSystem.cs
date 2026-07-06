@@ -52,7 +52,7 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
     [Dependency] private readonly IAdminManager _admin = default!;
     [Dependency] private readonly IConfigurationManager _configManager = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapManager = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly AccessReaderSystem _reader = default!;
     [Dependency] private readonly ChatSystem _chatSystem = default!;
@@ -406,7 +406,7 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
 
     private void AddCentcomm(EntityUid station, StationCentcommComponent component)
     {
-        DebugTools.Assert(LifeStage(station)>= EntityLifeStage.MapInitialized);
+        DebugTools.Assert(LifeStage(station) >= EntityLifeStage.MapInitialized);
         if (component.MapEntity != null || component.Entity != null)
         {
             Log.Warning("Attempted to re-add an existing centcomm map.");
@@ -499,7 +499,7 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         if (!_emergencyShuttleEnabled)
             return;
 
-        if (ent.Comp1.EmergencyShuttle != null )
+        if (ent.Comp1.EmergencyShuttle != null)
         {
             if (Exists(ent.Comp1.EmergencyShuttle))
             {

@@ -8106,3 +8106,425 @@ Entries:
   id: 6159
   time: '2026-06-29T00:48:01.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/922
+- author: Bradysgaming
+  changes:
+    - type: Fix
+      message: Fixed C-27 Aggro with a pipboy.
+  id: 6160
+  time: '2026-06-29T02:22:13.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/924
+- author: cythisiax
+  changes:
+    - type: Add
+      message: >-
+        Followers, Enclave, Rangers, NCR, Brotherhood individualized tacmaps w/
+        appropriate access. Mappers will need to re-map accordingly. example,
+        FoTA tacmap access defaults to BoS. Will no longer w/ proper mapped
+        proto.
+    - type: Add
+      message: auto map render on server start if map values/yaml change
+    - type: Fix
+      message: adminlog spam from Projectile Bullet
+    - type: Fix
+      message: SIlicons no longer have crit crawl
+  id: 6161
+  time: '2026-06-29T12:51:49.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/926
+- author: Sirius
+  changes:
+    - type: Add
+      message: >-
+        Mr. Lowe, impressed with Vault-14s performance recently, has used the
+        windfall their pockets are burdened with to provide the aging Vault with
+        a much-needed update to its infrastructure - Vault-14 now has a
+        Logistics department, complete with Cargo, Courier, and Salvage
+        services.
+    - type: Add
+      message: >-
+        The Cargo department, to fulfill its duties and obligations, has been
+        provided with a state-of-the-art cargo elevator. The elevator is capable
+        of being used by a patented ASRS terminal which has been provided to the
+        department and can handle sales and purchases for the Vault as a whole.
+        Don't think too hard about where it all goes and comes from.
+    - type: Tweak
+      message: >-
+        Reflecting on the failures of Vault-14 security in the past to protect
+        the reactor, it was decided that a new site for Vault-14's power supply
+        would be excavated beneath the rest of the Vault in a nearby cavern.
+        Less energy is needed for active cooling, and in the event of a
+        catastrophic failure, damage to the rest of the vault is minimized by
+        the Reactors distance from important infrastructure, as well as a robust
+        battery bank which can provide prolonged power until emergency power
+        generation can be hooked up to the grid.
+    - type: Tweak
+      message: >-
+        The Engineering Department has been moved across the hall. No expense
+        was spared in uprooting and moving the old, ragged atmospherics
+        facilities to make room for a brand-new Workshop.
+    - type: Tweak
+      message: >-
+        The waterworks in Vault-14 were lackluster, and prone to failure due to
+        aging infrastructure. A new water treatment facility was integrated into
+        the Vault and is fitted with state-of-the-art monitoring and control
+        systems to help maintain and provide potable water for residents of
+        Vault-14.
+  id: 6162
+  time: '2026-06-29T13:01:53.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/928
+- author: cythisiax
+  changes:
+    - type: Add
+      message: >-
+        force pipboy validate through cardcomponent to be visible via overwatch.
+        If no pipboy, they no show up in roster list.
+  id: 6163
+  time: '2026-06-29T18:50:47.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/929
+- author: Vixting
+  changes:
+    - type: Tweak
+      message: You can now recruit friednly mobs
+    - type: Fix
+      message: Fixed Legion charlie dog not being recruitable
+    - type: Fix
+      message: Fixed legion pet dog perk not spawning it with 8+ charisma
+  id: 6164
+  time: '2026-06-29T21:23:41.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/927
+- author: Operator
+  changes:
+    - type: Add
+      message: Move&Attack command for the ZAX
+    - type: Tweak
+      message: ZAX commands are more reliable
+    - type: Fix
+      message: Move in formation actually moves in formation
+    - type: Fix
+      message: ZAX units no longer attack each other
+    - type: Tweak
+      message: ZAX units carry vision&connection where they go now.
+    - type: Tweak
+      message: Faction cameras dont carry ZAX vision. ZAX has its own camera type now.
+  id: 6165
+  time: '2026-06-29T21:32:08.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/925
+- author: cythjisiax
+  changes:
+    - type: Fix
+      message: suppress Entity Spawn/Tile Placement systems in chat
+    - type: Tweak
+      message: used microsoft paint on map .png to remove eye annoyances on render
+    - type: Add
+      message: >-
+        enclave recruit verb, stealth adds to EnclaveRecruit job for dept time
+        in Enclave
+    - type: Tweak
+      message: >-
+        Wastelander now 8H timelock requirement (server pTime), Townsperson new
+        default, unlimited slots
+  id: 6166
+  time: '2026-06-30T02:41:11.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/932
+- author: Bradysgaming
+  changes:
+    - type: Add
+      message: Added Off duty bos role, parity of citizens
+    - type: Fix
+      message: >-
+        fixed Fertilizer, Now part of a new chem that has the same 1u effect.
+        (25 fert + 5 dung makes it)
+  id: 6167
+  time: '2026-06-30T02:52:32.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/933
+- author: Vixting
+  changes:
+    - type: Add
+      message: Intel now gives access to additional hand craftable recipes
+    - type: Remove
+      message: Removed intel reducing material cost
+    - type: Tweak
+      message: Reduced circuit costs
+  id: 6168
+  time: '2026-06-30T12:32:08.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/882
+- author: Bradysgaming
+  changes:
+    - type: Add
+      message: Elders can now do a war cry. (Admin Thing)
+    - type: Tweak
+      message: >-
+        Changed the recipe for PlantGrowthMixture to be 5 fertillizer and 2.5
+        dung. This means 1 poop is one plant instead of 5 like when it was
+        bugged.
+  id: 6169
+  time: '2026-06-30T12:45:28.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/938
+- author: Operator
+  changes:
+    - type: Add
+      message: Z.A.X C-27 Chassis/Sub-Chassis
+    - type: Add
+      message: >-
+        Z.A.X Player-Silicons [Gutsy, Handy, Protectron, etc] No sprite changes
+        yet.
+    - type: Add
+      message: Z.A.X Machine Foundry
+    - type: Add
+      message: Z.A.X Pulse Rifle [Sprites by Taro_Varne]
+    - type: Add
+      message: Z.A.X Augmented Medium Armor [Sprites by Taro_Varne]
+    - type: Tweak
+      message: Z.A.X NPC aggression has been toned down/fixed
+    - type: Tweak
+      message: >-
+        Z.A.X Core Move commands work slightly differently and highlight the
+        tiles you select.
+    - type: Add
+      message: Binary Radio, linked all Z.A.X related units into it. binds to z
+    - type: Tweak
+      message: Z.A.X Securitrons are now also ghostroles
+    - type: Add
+      message: Z.A.X C-27 Ghost Role form [its still locked to the whitelist]
+  id: 6170
+  time: '2026-06-30T13:39:50.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/937
+- author: Bradysgaming
+  changes:
+    - type: Remove
+      message: >-
+        Removed Plantgrowthmixture stuff. Your back to the old ANY fertilizer
+        insta grows it.
+  id: 6171
+  time: '2026-06-30T13:40:11.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/939
+- author: Bradysgaming
+  changes:
+    - type: Tweak
+      message: Made BOS off duty not auto enlisted in wars
+  id: 6172
+  time: '2026-06-30T14:09:23.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/940
+- author: Jerryaqua
+  changes: []
+  id: 6173
+  time: '2026-07-01T01:37:58.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/934
+- author: Vixting
+  changes:
+    - type: Add
+      message: 10 int can craft conveyer, lever, button
+  id: 6174
+  time: '2026-07-01T01:38:32.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/941
+- author: cythisiax
+  changes:
+    - type: Add
+      message: 'RMC Flamer reference port. '
+    - type: Add
+      message: >-
+        Explosive flamers, weldingfuel, generators, and/or any containers
+        containing weldingfuel. Welcome to the trenches.
+    - type: Add
+      message: Whitelist Logging & Discord Channel Report
+    - type: Add
+      message: Confirmation menu for Whitelist Logging
+    - type: Add
+      message: Door Logger in Log tab F7 (Someone kills door = logged)
+    - type: Add
+      message: Custom ghost color via yaml and raw username adjustments.
+    - type: Add
+      message: >-
+        Brahdo/Brahmin when mounted & shot off of, can lose WASD input, and
+        chance of bucking off. Abysmal meta fixed.
+    - type: Add
+      message: >-
+        Legion Princeps Loadout gated behind 25 hours Vet Decani by Bill
+        Clinton/nope_no
+    - type: Add
+      message: >-
+        Morale Trooper Squad Lead (MSL) sprites & Loadout with trench shotty by
+        Pink109.
+    - type: Tweak
+      message: New/separate logs tab where > Logs | Door Log | Whitelist Log exists.
+    - type: Tweak
+      message: Missing something I know I am
+    - type: Tweak
+      message: NCRMP baton nerf
+    - type: Tweak
+      message: /surrender nerfed to 15 mins, option of Right click > Interact > Help Up
+    - type: Tweak
+      message: Followers FoTA Tacmap updated from displaying name to 'Missing Person'
+    - type: Tweak
+      message: Removed glow from combat aggro indicator.
+    - type: Tweak
+      message: >-
+        War System now has F7 > Loremaster > Admin Observe for war
+        [ALLY]/[ENEMY] tag.
+    - type: Tweak
+      message: Weather caching for draws. (Performance increase, marginal, but there)
+    - type: Tweak
+      message: C27 self heal from -0.3 to > -0.15
+    - type: Fix
+      message: Placement Suppress suppressed appropriately for ADMIN alerts
+    - type: Fix
+      message: Gravis timegate > 50 hours reduced to 20. Typo?
+  id: 6175
+  time: '2026-07-01T20:20:30.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/944
+- author: Operator
+  changes:
+    - type: Add
+      message: Back&Side ZAX Monitor sprites by Beepbop
+    - type: Add
+      message: >-
+        Z.A.X Camera Hacking. Takes 30 seconds. Plays spark sounds. Has a
+        visible doafter.
+    - type: Tweak
+      message: >-
+        Z.A.X can use terminals that are powered and within its vision range. It
+        has access to VAULT-TEC databases.
+    - type: Add
+      message: >-
+        Z.A.X can use terminals as a form of non-projecting holopad. You can
+        emote through them non-physically now too.
+  id: 6176
+  time: '2026-07-01T20:22:12.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/946
+- author: Bradysgaming
+  changes:
+    - type: Tweak
+      message: Locked Off duty BOS goobers in the outer bunker (dirt rooms and etc)
+    - type: Tweak
+      message: >-
+        Reworded Offduty bos description to reiterate the part where they should
+        not be fighting wars
+  id: 6177
+  time: '2026-07-01T21:07:22.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/948
+- author: cythisiax
+  changes:
+    - type: Fix
+      message: 'Securitron had a floating [ERROR] like it was 2012 and Garrys Mod. '
+  id: 6178
+  time: '2026-07-01T22:03:32.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/949
+- author: Bradysgaming
+  changes:
+    - type: Remove
+      message: Removed Deogratory spray decal
+  id: 6179
+  time: '2026-07-03T00:28:43.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/955
+- author: Jerryaqua
+  changes:
+    - type: Remove
+      message: The AER-9A is dead, Long live the AER-9A
+    - type: Tweak
+      message: >-
+        The RCW has been reworked to fill a similar role, as well as electron
+        charge pack size buff. 
+    - type: Tweak
+      message: The AER-9 is no longer useless
+    - type: Tweak
+      message: The AER-12 now is viable T4
+    - type: Tweak
+      message: 'The AER-14 has lost DPS for potential damage '
+  id: 6180
+  time: '2026-07-03T03:54:05.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/943
+- author: cythisisax
+  changes:
+    - type: Fix
+      message: Principes and MSL use proper sprites.
+  id: 6181
+  time: '2026-07-03T04:13:34.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/952
+- author: RedBookcase
+  changes:
+    - type: Add
+      message: >-
+        Brahmin Milk is now an inefficient anti-radiation medicine. Brahmin now
+        produce milk a bit more efficiently as well.
+    - type: Tweak
+      message: >-
+        Bitterdrink was easily mass produced with the same ingredients required
+        to make Stimpaks/Healing Powder and it was the most effective treatment
+        for poison/rads in the game. It can no longer be hand crafted and
+        instead requires you to boil a mixture of Brahmin Milk, Datura Extract,
+        and Pinyon Extract to be produced. It remains reasonably effective at
+        treating radiation and poison damage but does not excel at either
+        compared to Radaway/Antidote. It also makes you cough when you drink it
+        because that shit canonically tastes like ass.
+    - type: Tweak
+      message: >-
+        Basic Antidote no longer cures both radiation and poison damage, just
+        poison. Refined antidote treats poison more effectively and does a tiny
+        bit of radiation treatment as well. Swapped the recipes around - basic
+        antidote is made with scorpion tail and tarberries, while refined
+        antidote requires ethanol.
+    - type: Tweak
+      message: >-
+        Radaway and Diluted Radaway had their radiation treatment toned down
+        significantly. A full bag of Radaway was previously capable of treating
+        500 Rad damage - now it treats 200.
+    - type: Tweak
+      message: >-
+        People were previously using a mixture of Stimpak and Dirty Stimpak to
+        replicate the types of healing only achievable with Super Stimpaks.
+        Added a new reaction that causes Dirty Stimpak to contaminate regular
+        Stimpak fluid.
+    - type: Add
+      message: >-
+        Cleansing Powder was previously a 25u pill of pure Radaway, meaning it
+        was extremely efficient and completely negated any need for Radaway.
+        It's been made it's own reagent now which is far less effective at
+        treating Radiation poisoning and it'll make you drowsy. But it's better
+        than the alternative.
+    - type: Add
+      message: >-
+        Added a reaction for producing smelling salts with Ammonia and Table
+        Salt to allow low-tech groups to produce smelling salts.
+    - type: Add
+      message: >-
+        CHEMS! Added new recipes for making Buffout, Cateye, Fixer and Med-x.
+        Various minor chem tweaks, such as making Psycho cause random screaming
+        and giving Buffjet more of a purpose.
+    - type: Add
+      message: >-
+        Added an admin-only spawnable topical to treat extreme cases of
+        Malnutrition at lucky's request.
+    - type: Tweak
+      message: Various minor bugfixes/qol changes.
+  id: 6182
+  time: '2026-07-03T18:03:26.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/942
+- author: Vixting
+  changes:
+    - type: Add
+      message: adds promethine syringe for mapping
+  id: 6183
+  time: '2026-07-03T18:04:07.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/957
+- author: Jerryaqua
+  changes:
+    - type: Tweak
+      message: 'made 12.7 a unique and viable SMG round! '
+  id: 6184
+  time: '2026-07-04T05:15:15.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/958
+- author: Jerryaqua
+  changes:
+    - type: Tweak
+      message: NCRR/NCRA blueprints
+    - type: Tweak
+      message: 'Elite ranger helmets '
+  id: 6185
+  time: '2026-07-04T05:20:51.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/917
+- author: Bradysgaming
+  changes:
+    - type: Remove
+      message: Removed Space cleaner recipe.
+  id: 6186
+  time: '2026-07-04T05:39:32.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/959

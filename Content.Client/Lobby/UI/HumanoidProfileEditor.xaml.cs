@@ -144,6 +144,7 @@ namespace Content.Client.Lobby.UI
                 ("C27", "humanoid-profile-editor-robot-model-c27-generic"),
                 ("C27NCR", "humanoid-profile-editor-robot-model-c27-ncr"),
                 ("C27BoS", "humanoid-profile-editor-robot-model-c27-bos"),
+                ("C27ZAX", "humanoid-profile-editor-robot-model-c27-zax"),
             },
         };
 
@@ -1840,6 +1841,7 @@ namespace Content.Client.Lobby.UI
                 || speciesId == "RobotRobobrainLaser"
                 || speciesId == "C27NCR" // #Misfits Add - C-27 NCR variant picked via Robot Model dropdown
                 || speciesId == "C27BoS" // #Misfits Add - C-27 Brotherhood variant picked via Robot Model dropdown
+                || speciesId == "C27ZAX" // #Misfits Add - C-27 Z.A.X variant picked via Robot Model dropdown
                 || speciesId == "RobotProtectronTribal"; // Misfits Add - Protectron Spirit-Tender
         }
 
@@ -2685,11 +2687,14 @@ namespace Content.Client.Lobby.UI
             var carry = SharedSpecialSystem.GetCurvedEffectModifier(
                 delta,
                 tuning.StrengthCarryPullSpeedMultiplierPerPoint);
+            var throwSpeed = SharedSpecialSystem.GetCurvedEffectModifier(
+                delta,
+                tuning.StrengthThrowSpeedMultiplierPerPoint);
             var duffel = value >= 7
                 ? ", ignores duffel bag slowdown"
                 : string.Empty;
 
-            return $"melee damage {FormatSignedPercent(melee)}, unarmed damage {FormatSignedPercent(unarmed)}, carry/pull speed {FormatSignedPercent(carry)}{duffel}.";
+            return $"melee damage {FormatSignedPercent(melee)}, unarmed damage {FormatSignedPercent(unarmed)}, carry/pull speed {FormatSignedPercent(carry)}, throw speed {FormatSignedPercent(throwSpeed)}{duffel}.";
         }
 
         private static string GetPerceptionEffectDetails(int value, SpecialTuningPrototype tuning)
@@ -2758,13 +2763,14 @@ namespace Content.Client.Lobby.UI
                 : $"hand crafting delay {FormatSignedPercent(GetIntelligenceConstructionDelayModifier(value))}";
             var lathe = value <= 3
                 ? "lathes locked"
-                : $"lathe production time {FormatSignedPercent(GetIntelligenceLatheTimeModifier(value, tuning))}, lathe material cost {FormatSignedPercent(GetIntelligenceLatheMaterialCostModifier(value, tuning))}";
-            var medical = $"medical action speed {FormatSignedPercent(SharedSpecialSystem.GetIntelligenceMedicalActionSpeed(value) - 1f)} (CPR, healing, surgery, scans)";
+                : $"lathe production time {FormatSignedPercent(GetIntelligenceLatheTimeModifier(value, tuning))}";
+            var medical = $"medical action speed {FormatSignedPercent(SharedSpecialSystem.GetIntelligenceMedicalActionSpeed(value) - 1f)} (CPR, healing, surgery, scans), topical healing {FormatSignedPercent(SharedSpecialSystem.GetIntelligenceTopicalHealingMultiplier(value) - 1f)}";
             var extra = value switch
             {
                 <= 1 => ", low-intelligence accent",
-                >= 10 => ", detailed chemical scans, medical HUD",
-                >= 8 => ", detailed chemical scans",
+                >= 10 => ", solution examine on all containers, medical HUD",
+                >= 8 => ", solution scan verb",
+                >= 7 => ", hand caft workbench recipes",
                 _ => string.Empty,
             };
 
