@@ -44,6 +44,8 @@
     - ActionStationAiHackCamera
     - ActionStationAiOpenWendoverMap
     - ActionStationAiOpenLinkedUnits
+    # [Changed by MisfitsCrew/Operator] Grant the core brain the server-validated Z.A.X shunt targeting action.
+    - ActionZaxShunt
   - type: WastelandMap
     mapTexturePath: _Misfits/Maps/wendover_map.png
     mapTitle: Wendover Area Map
@@ -350,30 +352,15 @@
 
 - type: entity
   id: PlayerStationAiEmpty
-  name: Z.A.X. Core
-  description: A pre-war Z.A.X. mainframe adapted as a central command core.
+  # [Changed by MisfitsCrew/Operator] Restore the shared Station AI identity and art instead of globally replacing it with Z.A.X.
+  name: AI Core
+  description: The latest in Artificial Intelligences.
   parent:
   - BaseStructure
   - AiHolder
   suffix: Empty
   components:
   - type: WarpPoint
-  - type: EncryptionKeyHolder
-    keySlots: 4
-  - type: IntrinsicRadioReceiver
-  - type: IntrinsicRadioTransmitter
-    channels:
-    - WastelandGlobal
-    - ZAXBinary
-  - type: ActiveRadio
-    channels:
-    - WastelandGlobal
-    - ZAXBinary
-  - type: ContainerFill
-    containers:
-      key_slots:
-      - EncryptionKeyWastelandGlobal
-      - EncryptionKeyZAX
   - type: ContainerComp
     proto: AiHeld
     container: station_ai_mind_slot
@@ -394,10 +381,12 @@
   - type: StationAiVision
   - type: InteractionOutline
   - type: Sprite
-    sprite: _Misfits/Mobs/Silicon/zax_core.rsi
+    sprite: Mobs/Silicon/station_ai.rsi
     layers:
+    - state: base
     - state: ai_empty
-      map: ["core"]
+      map: ["unshaded"]
+      shader: unshaded
   - type: Appearance
   - type: InteractionPopup
     interactSuccessString: petting-success-station-ai
@@ -408,7 +397,7 @@
   - type: GenericVisualizer
     visuals:
       enum.StationAiVisualState.Key:
-        core:
+        unshaded:
           Empty: { state: ai_empty }
           Occupied: { state: ai }
   - type: LanguageKnowledge
@@ -450,6 +439,60 @@
 - type: entity
   id: PlayerStationAi
   parent: PlayerStationAiEmpty
+  suffix: Job spawn
+  components:
+  - type: ContainerSpawnPoint
+    containerId: station_ai_mind_slot
+    job: StationAi
+  - type: Sprite
+    sprite: Mobs/Silicon/station_ai.rsi
+    layers:
+    - state: base
+    - state: ai
+      shader: unshaded
+
+# [Changed by MisfitsCrew/Operator] Keep the Z.A.X. core variant separate from the shared Station AI
+# prototypes so maps using PlayerStationAi retain the original core object.
+- type: entity
+  id: PlayerZaxAiEmpty
+  name: Z.A.X. Core
+  description: A pre-war Z.A.X. mainframe adapted as a central command core.
+  parent: PlayerStationAiEmpty
+  suffix: Empty
+  components:
+  - type: ZaxCore
+  - type: EncryptionKeyHolder
+    keySlots: 4
+  - type: IntrinsicRadioReceiver
+  - type: IntrinsicRadioTransmitter
+    channels:
+    - WastelandGlobal
+    - ZAXBinary
+  - type: ActiveRadio
+    channels:
+    - WastelandGlobal
+    - ZAXBinary
+  - type: ContainerFill
+    containers:
+      key_slots:
+      - EncryptionKeyWastelandGlobal
+      - EncryptionKeyZAX
+  - type: Sprite
+    sprite: _Misfits/Mobs/Silicon/zax_core.rsi
+    layers:
+    - state: ai_empty
+      map: ["core"]
+  - type: GenericVisualizer
+    visuals:
+      enum.StationAiVisualState.Key:
+        core:
+          Empty: { state: ai_empty }
+          Occupied: { state: ai }
+
+- type: entity
+  id: PlayerZaxAi
+  # [Changed by MisfitsCrew/Operator] Provide a job-ready Z.A.X variant without mutating the shared Station AI spawn.
+  parent: PlayerZaxAiEmpty
   suffix: Job spawn
   components:
   - type: ContainerSpawnPoint

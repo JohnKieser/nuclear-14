@@ -20,6 +20,16 @@ public sealed partial class StationAiEngageSelectedNpcsActionEvent : EntityTarge
 
 public sealed partial class StationAiHoldSelectedNpcsActionEvent : InstantActionEvent;
 
+/// <summary>
+/// [Changed by MisfitsCrew/Operator] Moves the Z.A.X core player's mind into a visible, unoccupied NPC Z.A.X chassis.
+/// </summary>
+public sealed partial class ZaxShuntActionEvent : EntityTargetActionEvent;
+
+/// <summary>
+/// [Changed by MisfitsCrew/Operator] Returns a shunted Z.A.X mind to the brain held by its original core.
+/// </summary>
+public sealed partial class ZaxReturnToCoreActionEvent : InstantActionEvent;
+
 [Serializable, NetSerializable]
 public sealed class StationAiNpcMoveTargetingFinishedEvent : EntityEventArgs;
 

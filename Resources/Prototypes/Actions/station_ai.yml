@@ -216,3 +216,35 @@
     checkConsciousness: false
     event: !type:OpenUiActionEvent
       key: enum.ZaxLinkedUnitsUiKey.Key
+
+# [Changed by MisfitsCrew/Operator] Adds direct-control shunting into an eligible Z.A.X NPC chassis.
+- type: entity
+  id: ActionZaxShunt
+  name: Shunt into Z.A.X unit
+  description: Moves your consciousness into a visible, unoccupied NPC Z.A.X chassis.
+  components:
+  - type: EntityTargetAction
+    priority: -30
+    itemIconStyle: BigAction
+    icon: Interface/VerbIcons/sentient.svg.192dpi.png
+    checkCanInteract: false
+    checkConsciousness: false
+    checkCanAccess: false
+    range: 0
+    event: !type:ZaxShuntActionEvent
+
+# [Changed by MisfitsCrew/Operator] Lets the shunted controller return to the protected brain in the physical core.
+- type: entity
+  id: ActionZaxReturnToCore
+  name: Return to Z.A.X core
+  description: Shunts your consciousness back into the main Z.A.X core.
+  components:
+  - type: InstantAction
+    priority: -30
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/actions_ai.rsi
+      state: ai_core
+    checkCanInteract: false
+    checkConsciousness: false
+    event: !type:ZaxReturnToCoreActionEvent
