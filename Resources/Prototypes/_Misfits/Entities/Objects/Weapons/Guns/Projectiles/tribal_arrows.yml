@@ -43,5 +43,6 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 35
-        Slash: 10
+        Piercing: 10
+        Slash: 50
+
