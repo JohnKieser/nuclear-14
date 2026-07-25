@@ -1,6 +1,9 @@
 using Content.Client.Weapons.Ranged.Components;
+using Content.Shared.Throwing;
+using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Client.GameObjects;
+using Robust.Shared.Physics.Components;
 
 namespace Content.Client.Weapons.Ranged.Systems;
 
@@ -9,6 +12,7 @@ public sealed partial class GunSystem
     private void InitializeSpentAmmo()
     {
         SubscribeLocalEvent<SpentAmmoVisualsComponent, AppearanceChangeEvent>(OnSpentAmmoAppearance);
+
     }
 
     private void OnSpentAmmoAppearance(EntityUid uid, SpentAmmoVisualsComponent component, ref AppearanceChangeEvent args)
@@ -30,8 +34,10 @@ public sealed partial class GunSystem
             state = component.State;
 
         sprite.LayerSetState(AmmoVisualLayers.Base, state);
-        if (sprite.LayerExists(AmmoVisualLayers.Tip)){
+        if (sprite.LayerExists(AmmoVisualLayers.Tip))
+        {
             sprite.RemoveLayer(AmmoVisualLayers.Tip);
         }
     }
+
 }
