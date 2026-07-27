@@ -148,16 +148,19 @@
     capacity: 10
   - type: Sprite
     netsync: false
+    scale: .6, .6
     sprite: _Nuclear14/Objects/Weapons/Guns/Ammunition/Magazines/garand308.rsi
     layers:
+    - state: shadow
+    - state: mag-10
+      map: ["enum.GunVisualLayers.Mag"]
     - state: base
       map: ["enum.GunVisualLayers.Base"]
-    - state: mag-1
-      map: ["enum.GunVisualLayers.Mag"]
+
   - type: MagazineVisuals
     magState: mag
-    steps: 1 # #Misfits Fix: RSI only has mag-0 (empty) and mag-1 (loaded); steps:1 maps correctly
-    zeroVisible: true
+    steps: 11 # #Misfits Fix Fix: Cart visualizer subtracts 1 from mag-1
+    zeroVisible: false
   - type: Appearance
 
 - type: entity # Forge-add-start
