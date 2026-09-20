@@ -12,6 +12,11 @@ undecided-loadout-category-explorer-raider-description =
     Includes a 10mm chinese smg, 2 bolas, 2 magazines for the smg, a 1911,
     a healing poultice, a healing powder, 2 K rations, and a ceramic flask.
 
+undecided-loadout-category-explorer-hunter-name = Explorer Hunter
+undecided-loadout-category-explorer-hunter-description =
+    Includes a rapid fire hunting rifle, 2 308. Ammo boxes, a bola, healing powder,
+    a healing poultice, 2 K rations, and a ceramic flask.
+
 # Migrated Corvax legacy Legion keys
 undecided-loadout-category-bestiary-name = Centurion-Bestiary Kit
 undecided-loadout-category-bestiary-description =
@@ -304,19 +309,28 @@ undecided-loadout-category-corvax-venator-marksman-name = Venator Marksman
 undecided-loadout-category-corvax-venator-marksman-description =
     Includes a .308 sniper rifle, a rope belt,
     4 mags of Overpressure .308, night vision goggles,
-    2 healing poultice, 2 K rations,
+    3 smoke grenades, 2 healing poultice, 2 K rations,
     a ceramic flask, and mustard.
 
 undecided-loadout-category-corvax-venator-stalker-name = Venator Stalker
 undecided-loadout-category-corvax-venator-stalker-description =
     Includes an advanced 12.7mm SMG, 3 spare 12.7 magazines,
-    a rope belt, night vision goggles, 2 healing poultice,
-    2 K rations, a ceramic flask, and mustard.
+    a rope belt, 2 smoke grenades, night vision goggles, 
+    2 healing poultice, 2 K rations,
+    a ceramic flask, and mustard.
 
 undecided-loadout-category-corvax-venator-executioner-name = Venator Executioner
 undecided-loadout-category-corvax-venator-executioner-description =
-    Includes a blowback shotgun, a rope belt,
-    2 boxes of 12 gauge shells, a ceremonial sword,
+    Includes a blowback shotgun, a ceremonial sword, 
+    a rope belt, 2 boxes of 12 gauge shells, 
+    an offensive grenade, night vision goggles,
+    2 healing poultice, 2 K rations,
+    a ceramic flask, and mustard.
+
+undecided-loadout-category-corvax-venator-operative-name = Venator Operative
+undecided-loadout-category-corvax-venator-operative-description =
+    Includes a modified and supressed R91, a rope belt,
+    3 spare 5.56 magazines, 2 offensive frag grenades,
     night vision goggles, 2 healing poultice, 2 K rations,
     a ceramic flask, and mustard.
 

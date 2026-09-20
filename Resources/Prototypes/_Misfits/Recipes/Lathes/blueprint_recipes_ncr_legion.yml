@@ -2053,6 +2053,19 @@
     Wood: 1500
     N14Iron: 500
 
+- type: latheRecipe
+  id: N14BPLegionWeaponSniperPaciencia
+  result: N14WeaponSniperPaciencia
+  category: N14BlueprintLegionWeaponsT2
+  completetime: 9
+  requiresBlueprint: true
+  availableFaction:
+  - CaesarLegion
+  materials:
+    Steel: 4000
+    Wood: 2500
+    N14Iron: 500
+
 # --- Legion Tier 3 Weapons (Veteran grade) ---
 - type: latheRecipe
   id: N14BPLegionWeaponCeremonialSword

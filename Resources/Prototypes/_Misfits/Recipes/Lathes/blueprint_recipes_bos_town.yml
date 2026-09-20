@@ -1557,6 +1557,19 @@
     N14Iron: 500
 
 - type: latheRecipe
+  id: N14BPTownWeaponSniperPaciencia
+  result: N14WeaponSniperPaciencia
+  category: N14BlueprintTownWeaponsT2
+  completetime: 9
+  requiresBlueprint: true
+  availableFaction:
+  - Townsfolk
+  materials:
+    Steel: 4000
+    Wood: 2500
+    N14Iron: 500
+
+- type: latheRecipe
   id: N14BPTownWeaponSniper44LeverShortCarbine
   result: N14WeaponSniper44LeverShortCarbine
   category: N14BlueprintTownWeaponsT2
