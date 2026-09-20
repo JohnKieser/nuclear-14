@@ -632,6 +632,32 @@
     - N14ClothingUniformNCRFatiguePants
 
 - type: loadout
+  id: LoadoutNCRUniformNCRMedic
+  category: Roles
+  cost: 1
+  exclusive: true
+  requirements:
+    - !type:CharacterJobRequirement
+      jobs:
+        - NCRMedic
+        - NCRDoctor
+  items:
+    - M14ClothingUniformNCRMedic
+
+- type: loadout
+  id: LoadoutNCRUniformNCRMedicSkirt
+  category: Roles
+  cost: 1
+  exclusive: true
+  requirements:
+    - !type:CharacterJobRequirement
+      jobs:
+        - NCRMedic
+        - NCRDoctor
+  items:
+    - M14ClothingUniformNCRMedicSkirt
+
+- type: loadout
   id: LoadoutNCRBeltNCRHarness
   category: Roles
   cost: 1
