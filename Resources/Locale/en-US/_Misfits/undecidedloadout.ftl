@@ -330,7 +330,7 @@ undecided-loadout-category-corvax-venator-executioner-description =
 undecided-loadout-category-corvax-venator-operative-name = Venator Operative
 undecided-loadout-category-corvax-venator-operative-description =
     Includes a modified and supressed R91, a rope belt,
-    3 spare 5.56 magazines, 2 offensive frag grenades,
+    3 spare 5.56 magazines, an offensive frag grenade,
     night vision goggles, 2 healing poultice, 2 K rations,
     a ceramic flask, and mustard.
 

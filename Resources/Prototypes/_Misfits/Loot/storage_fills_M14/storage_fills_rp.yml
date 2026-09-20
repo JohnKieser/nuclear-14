@@ -2321,9 +2321,6 @@
         - id: N14WeaponRifle308Battle
           prob: 0.07
           orGroup: Weapon
-        - id: N14WeaponRifle308Battle
-          prob: 0.07
-          orGroup: Weapon
         - id: N14WeaponRifle556CarbineOld
           prob: 0.05
           orGroup: Weapon
