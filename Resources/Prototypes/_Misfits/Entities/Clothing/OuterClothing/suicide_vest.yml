@@ -26,9 +26,9 @@
     - Trigger
   - type: Explosive
     explosionType: Default
-    totalIntensity: 300
-    intensitySlope: 5
-    maxIntensity: 40
+    totalIntensity: 500
+    intensitySlope: 4
+    maxIntensity: 38
     canCreateVacuum: false
   - type: ExplodeOnTrigger
   - type: GibOnTrigger
