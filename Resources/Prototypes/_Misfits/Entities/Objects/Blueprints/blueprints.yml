@@ -329,6 +329,7 @@
     - N14BPLegionWeaponSMG10mmChinese
     - N14BPLegionWeaponSniper44LeverShortCarbine
     - N14BPLegionWeaponSniper308Ross
+    - N14BPLegionWeaponSniperPaciencia
 
 - type: entity
   parent: N14BlueprintBase
@@ -791,6 +792,7 @@
     - N14BPTownWeaponSMGPPSh41
     - N14BPTownWeaponRifleAk112
     - N14BPTownWeaponSniper308Ross
+    - N14BPTownWeaponSniperPaciencia
     - N14BPTownWeaponSniper44LeverShortCarbine
 
 - type: entity
