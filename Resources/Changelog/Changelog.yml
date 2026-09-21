@@ -11860,3 +11860,12 @@ Entries:
   id: 6465
   time: '2026-09-21T04:36:58.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1959
+- author: Vixting
+  changes:
+    - type: Add
+      message: Added a suicide vest.
+    - type: Add
+      message: Added suicide vest to legion recipe
+  id: 6466
+  time: '2026-09-21T13:37:54.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1972
