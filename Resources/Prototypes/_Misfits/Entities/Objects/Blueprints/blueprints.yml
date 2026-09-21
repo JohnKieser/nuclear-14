@@ -468,6 +468,7 @@
     - N14BPLegionAmmoMag9mmSMGDrum
     - N14BPLegionAmmoMag10mmSMG
     - N14BPLegionAmmoBox308
+    - MisfitsBPLegionSuicideVest
 
 - type: entity
   parent: N14BlueprintBase
