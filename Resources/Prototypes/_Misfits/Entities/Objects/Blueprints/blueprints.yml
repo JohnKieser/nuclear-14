@@ -183,6 +183,8 @@
     - N14BPNCRArmorRangerFieldArmor
     # #Misfits Add - Added Recruit Ranger sidegrade recipe
     - N14BPNCRArmorRangerFlakVest
+    # #Misfits Add - Added Medic Combat Armor
+    - MisfitsBPNCRArmorMedicCombatArmor
 
 - type: entity
   parent: N14BlueprintBase

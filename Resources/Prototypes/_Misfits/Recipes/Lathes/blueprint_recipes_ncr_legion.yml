@@ -945,6 +945,21 @@
 
     Leather: 120
 
+# #Misfits Add - NCR medic combat armor blueprint
+- type: latheRecipe
+  id: MisfitsBPNCRArmorMedicCombatArmor
+  result: MisfitsClothingOuterNCRMedicCombatArmor
+  category: N14BlueprintNCRArmorT3
+  completetime: 15
+  requiresBlueprint: true
+  availableFaction:
+  - NCR
+  materials:
+    Steel: 6000
+    Cloth: 1000
+    Thread: 150
+    Leather: 120
+
 
 - type: latheRecipe
   id: N14BPNCRArmorRangerVest
