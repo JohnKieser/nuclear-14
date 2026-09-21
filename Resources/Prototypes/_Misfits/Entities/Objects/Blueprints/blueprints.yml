@@ -762,7 +762,6 @@
     - N14BPTownWeaponPistolM1911
     - N14BPTownWeaponPistol12mm
     - N14BPTownWeaponShotgunSawedOff
-    - N14BPTownWeaponSMGAmerican180
     - N14BPTownWeaponRevolver357Detective
     - N14BPTownWeaponSniperCowboyRepeater
 
@@ -910,7 +909,6 @@
     # #Misfits Add - ammo for T1 mediocre guns (.45 / 12mm / .22 drum / .357)
     - N14BPTownAmmoMag45Pistol
     - N14BPTownAmmoMagPistol12mm
-    - N14BPTownAmmoMagAmerican180Drum
     - N14BPTownAmmoBox357
     - N14BPTownAmmoSpeedLoader357
 
@@ -996,6 +994,7 @@
     - N14BPVaultWeaponRifle10mmM1Carbine
     - N14BPVaultWeaponShotgunTrench
     - N14BPVaultWeaponSMG10mmChinese
+    - N14BPVaultWeaponAmerican180
 
 - type: entity
   parent: N14BlueprintBase

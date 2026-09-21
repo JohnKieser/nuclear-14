@@ -146,6 +146,20 @@
     Plastic: 100
     N14Iron: 500
 
+- type: latheRecipe
+  id: N14BPVaultWeaponAmerican180
+  result: N14WeaponSMGAmerican180
+  category: N14BlueprintVaultWeaponsT2
+  completetime: 12
+  requiresBlueprint: true
+  availableFaction:
+  - Vault
+  materials:
+    Steel: 8000
+    Plastic: 1500
+    N14Silver: 500
+    N14Gold: 300
+
 # --- Vault Tier 3 Weapons (R&D energy weapons) ---
 - type: latheRecipe
   id: N14BPVaultWeaponPlasmaPistol
