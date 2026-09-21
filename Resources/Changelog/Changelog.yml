@@ -11853,3 +11853,10 @@ Entries:
   id: 6464
   time: '2026-09-21T04:34:21.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1965
+- author: enkidienne
+  changes:
+    - type: Add
+      message: 2 armor 2 uniforms to the NCR medic.
+  id: 6465
+  time: '2026-09-21T04:36:58.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1959
