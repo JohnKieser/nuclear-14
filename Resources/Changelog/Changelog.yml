@@ -11844,3 +11844,12 @@ Entries:
   id: 6463
   time: '2026-09-20T12:26:56.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1958
+- author: JohnKieser
+  changes:
+    - type: Fix
+      message: >-
+        Damage to bodyparts now respect armor. Ignored even when 100% of damage
+        was resisted
+  id: 6464
+  time: '2026-09-21T04:34:21.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1965
