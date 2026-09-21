@@ -11869,3 +11869,16 @@ Entries:
   id: 6466
   time: '2026-09-21T13:37:54.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1972
+- author: JohnKieser
+  changes:
+    - type: Fix
+      message: >-
+        issues related to delfected projectiles and hitscans. Their visuals
+        should match up now. 
+    - type: Fix
+      message: >-
+        Armor with reflect probability values for lasers should now actually use
+        those probabilities instead of default
+  id: 6467
+  time: '2026-09-21T13:38:33.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1967
