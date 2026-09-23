@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   parent: SimpleMobBase
   id: N14MobBrahdo
   name: brahdo
@@ -10,7 +10,7 @@
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: grey_brahdo_horizontal
-      sprite: _Misfits/Mobs/Animals/brahdo.rsi
+      sprite: _Misfits/Mobs/Animals/brahdoLegacy.rsi
       scale: 0.9, 0.9
   - type: Fixtures
     fixtures:
@@ -113,7 +113,7 @@
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: light
-      sprite: _Misfits/Mobs/Animals/brahdo.rsi
+      sprite: _Misfits/Mobs/Animals/brahdoLegacy.rsi
       scale: 0.9, 0.9
   - type: DamageStateVisuals
     states:
@@ -137,7 +137,7 @@
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: armor
-      sprite: _Misfits/Mobs/Animals/brahdo.rsi
+      sprite: _Misfits/Mobs/Animals/brahdoLegacy.rsi
       scale: 0.9, 0.9
   - type: DamageStateVisuals
     states:
@@ -164,7 +164,7 @@
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: ncr
-      sprite: _Misfits/Mobs/Animals/brahdo.rsi
+      sprite: _Misfits/Mobs/Animals/brahdoLegacy.rsi
       scale: 0.9, 0.9
   - type: DamageStateVisuals
     states:
@@ -185,7 +185,7 @@
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: legion
-      sprite: _Misfits/Mobs/Animals/brahdo.rsi
+      sprite: _Misfits/Mobs/Animals/brahdoLegacy.rsi
       scale: 0.9, 0.9
   - type: DamageStateVisuals
     states:
@@ -206,7 +206,7 @@
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: light
-      sprite: _Misfits/Mobs/Animals/brahdo.rsi
+      sprite: _Misfits/Mobs/Animals/brahdoLegacy.rsi
       scale: 0.9, 0.9
   - type: DamageStateVisuals
     states:

@@ -1,16 +1,16 @@
 - type: language
-  id: N14Dog
+  id: MisfitsHorse
   isVisibleLanguage: false
   speech:
     color: "#FFFFFFcc"
   obfuscation:
     !type:SyllableObfuscation
     minSyllables: 1
-    maxSyllables: 10 # buff
+    maxSyllables: 10 # literate
     replacement:
-    - woof
-    - bark
-    - ruff
-    - bork
-    - raff
-    - garr
+    - neigh
+    - nicker
+    - groan
+    - whicker
+    - grunt
+    - squeal
