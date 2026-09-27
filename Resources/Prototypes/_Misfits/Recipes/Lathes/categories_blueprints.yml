@@ -161,9 +161,9 @@
   id: N14BlueprintBoSAmmoT4
   name: lathe-category-blueprint-bos-ammo-t4
 
-- type: latheCategory
-  id: N14BlueprintBoSAmmoT5
-  name: lathe-category-blueprint-bos-ammo-t5
+#- type: latheCategory
+#  id: N14BlueprintBoSAmmoT5
+#  name: lathe-category-blueprint-bos-ammo-t5
 
 # === TOWNSFOLK ===
 - type: latheCategory
@@ -311,6 +311,11 @@
 - type: latheCategory
   id: N14BlueprintTribeAmmoT4
   name: lathe-category-blueprint-tribe-ammo-t4
+
+# === FACTORY AUTOMATION ===
+- type: latheCategory
+  id: MisfitsBlueprintFactoryAutomation
+  name: lathe-category-blueprint-factory-automation
 
 # === ROBOBRAIN ===
 - type: latheCategory
