@@ -9,10 +9,10 @@
     # Weapons remain possible, but high-end guns are a minority of final-boss drops.
     - !type:NestedSelector
       tableId: M14WeaponLootTier3
-      weight: 30
+      weight: 20
     - !type:NestedSelector
       tableId: M14WeaponLootTier4
-      weight: 10
+      weight: 30
     # Equipment outcomes are deliberately faction-neutral and portable.
     - !type:EntSelector
       id: N14ClothingOuterLeatherArmor
@@ -113,6 +113,5 @@
     - !type:NestedSelector
       tableId: M14ExpeditionBossReward
     - !type:NestedSelector
-      tableId: M14WeaponLootTier3
-    - !type:NestedSelector
-      tableId: M14WeaponLootTier3
+      tableId: M14WeaponLootTier5
+

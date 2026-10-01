@@ -1,0 +1,298 @@
+# NCR equipment catalog. Army and Military Police equipment is rank/job gated here.
+
+- type: entity
+  parent: N14BaseRmcEquipmentVendor
+  id: N14NCREquipmentVendor
+  name: NCR equipment requisitions vendor
+  suffix: NCR
+  components:
+  - type: CMAutomatedVendor
+    departmentName: NCR
+    # Authorization is job-based below. Do not require a physical card tag as well:
+    # Heavy Trooper and Heavy Trooper Lead are authorized vendor roles even when their
+    # rank dogtag does not expose the generic NCR access tag.
+    jobs:
+    - NCRCadet
+    - NCRSoldier
+    - NCRPrivateFirstClass
+    - NCRMedic
+    - NCRDoctor
+    - NCREngineer
+    - NCRWS
+    - NCRHeavyTrooper
+    - NCRHeavyTrooperLead
+    - NCRNCO
+    - NCRStaffSergeant
+    - NCRFirstSergeant
+    - NCRVertibirdPilot
+    - NCRMPinvestigator
+    - NCRProvost
+    - NCRMilitaryPoliceRecruit
+    - NCRMilitaryPoliceSergeant
+    - NCRMilitaryPoliceCaptain
+    - NCRExecutiveOfficer
+    - NCRPlatoonLeader
+    - NCRRO
+    - NCRCommander
+    - NCRMajor
+    - NCRLTCol
+    # Role authority is vendor-local: it does not grant corresponding physical door access.
+    fullAllocationJobs: [ NCRRO, NCRCommander ]
+    replenishmentJobs: [ NCRRO ]
+    authorityJobTiers:
+      NCRCadet: 1
+      NCRSoldier: 1
+      NCRPrivateFirstClass: 1
+      NCRMedic: 1
+      NCREngineer: 1
+      NCRWS: 1
+      NCRHeavyTrooper: 2
+      NCRNCO: 3
+      NCRDoctor: 3
+      NCRVertibirdPilot: 3
+      NCRHeavyTrooperLead: 3
+      NCRStaffSergeant: 3
+      NCRFirstSergeant: 3
+      NCRMPinvestigator: 3
+      NCRProvost: 3
+      NCRMilitaryPoliceRecruit: 1
+      NCRMilitaryPoliceSergeant: 3
+      NCRMilitaryPoliceCaptain: 4
+      NCRExecutiveOfficer: 4
+      NCRPlatoonLeader: 4
+      NCRRO: 5
+      NCRCommander: 5
+      NCRMajor: 5
+      NCRLTCol: 5
+    allocationCategories: [ Helmet, Armor, Uniform, Mask, Gloves, Belt, Boots, Backpack, Neck, Eyes, Radio, Medical, Utility, Other equipment ]
+    sharedEquipmentCategories: [ Helmet, Armor, Uniform, Mask, Gloves, Belt, Boots, Backpack, Neck, Eyes, Radio, Medical, Utility, Other equipment ]
+    defaultAllocationCategory: Other equipment
+    defaultSharedEquipmentCategory: Other equipment
+    # Direct, mix-and-match replacements for the wearable/usable part of the former NCR loadout kits.
+    # The old random military box is decomposed into its medical/flare contents here; its NCR-dollar roll is
+    # intentionally not vendable, otherwise the vendor could create the currency used to fund its own resupply.
+    sections:
+    - name: Tier 1 - Trooper / Specialist allocation
+      entries:
+      - { id: ClothingBeltNCRPouches, category: Belt, tier: 1 }
+      - { id: ClothingBeltNCRBandolier, category: Belt, tier: 1 }
+      - { id: ClothingBeltNCR, category: Belt, tier: 1 }
+      - { id: ClothingBeltNCRShotgunner, category: Belt, tier: 1 }
+      - { id: N14ClothingUniformNCRRecon, category: Uniform, tier: 1 }
+      - { id: N14ClothingHeadHatNCRBeretRecon, category: Helmet, tier: 1 }
+      - { id: N14ClothingOuterNCRTrenchRaider, category: Armor, tier: 1 }
+      - { id: N14ClothingMaskSkirmisher, category: Mask, tier: 1 }
+      - { id: N14ClothingMaskPlate, category: Mask, tier: 1 }
+      - { id: N14ClothingNeckTownGuardMantle, category: Neck, tier: 1 }
+      - { id: RadioHandheld, category: Radio, tier: 1 }
+      - { id: N14Stimpak, category: Medical, tier: 1 }
+      - { id: N14RadXPill, category: Medical, tier: 1 }
+      - { id: N14CleanGauze10, category: Medical, tier: 1 }
+      - { id: N14ChemicalSyringeAntidote, category: Medical, tier: 1 }
+      - { id: N14Flare, category: Utility, tier: 1 }
+      - { id: Flare, category: Utility, tier: 1 }
+      - { id: N14BoxCardboardMREBoxCFilled, category: Utility, tier: 1 }
+      - { id: N14Psycho, category: Medical, tier: 1 }
+      - { id: WarhornNCRBugle, category: Utility, tier: 1 }
+      - { id: MisfitsMilitaryDetonator, category: Utility, tier: 1 }
+      - { id: N14BoxCardboardMREBoxKFilled, category: Utility, tier: 1 }
+      - { id: N14ClothingEyesGlassesGoggles, category: Eyes, tier: 1 }
+      - { id: N14ClothingEyesNCRGoggles, category: Eyes, tier: 1 }
+      - { id: N14ClothingHeadHatWinterBoonie, category: Helmet, tier: 1 }
+      - { id: N14ClothingHeadHatWoodBoonie, category: Helmet, tier: 1 }
+      - { id: N14ClothingHeadHatDesertBoonie, category: Helmet, tier: 1 }
+      - { id: N14ClothingHeadHatNCRStetson, category: Helmet, tier: 1 }
+      - { id: N14ClothingNeckCloakGhillie, category: Neck, tier: 1 }
+      - { id: N14ClothingNeckCloakNCRSnow, category: Neck, tier: 1 }
+      - { id: N14ClothingMaskBrownBalaclava, category: Mask, tier: 1 }
+      - { id: ClothingBeltNCRHarness, category: Belt, tier: 1 }
+      - { id: ClothingBeltMilitary, category: Belt, tier: 1 }
+      - { id: ClothingNeckStethoscope, category: Medical, tier: 1 }
+      - { id: SurgicalSterilanSpray, category: Medical, tier: 1 }
+      - { id: MisfitsHealingSalve5, category: Medical, tier: 1 }
+      - { id: MisfitsHerbalAnodyne5, category: Medical, tier: 1 }
+      - { id: MisfitsDaturaHide5, category: Medical, tier: 1 }
+      - { id: MisfitsSnakebiteTourniquet5, category: Medical, tier: 1 }
+    - name: Tier 1 - Trooper / Specialist allocation
+      entries:
+      - { id: N14ClothingBeltUtilityFilled, category: Belt, tier: 1 }
+      - { id: ClothingBeltNCRShotgunner, category: Belt, tier: 1 }
+      - { id: N14ShieldMetalHeavy, category: Utility, tier: 1 }
+      - { id: N14ToolboxMechanical, category: Utility, tier: 1 }
+      - { id: N14Stimpak, category: Medical, tier: 1 }
+      - { id: N14RadAwayBloodbag, category: Medical, tier: 1 }
+      - { id: N14CleanGauze10, category: Medical, tier: 1 }
+      - { id: N14BoxCardboardMREBoxCFilled, category: Utility, tier: 1 }
+    - name: Tier 1 - Trooper / Specialist allocation
+      entries:
+      - { id: N14ClothingHeadHatNCRHelmetMetalMedic, category: Helmet, tier: 1 }
+      - { id: N14ClothingOuterNCRPouchedVestDesert, category: Armor, tier: 1 }
+      - { id: N14ClothingBeltMedicalFilled, category: Belt, tier: 1 }
+      - { id: N14ClothingHandsGlovesNitrile, category: Gloves, tier: 1 }
+      - { id: ClothingMaskSterile, category: Mask, tier: 1 }
+      - { id: N14ClothingBackpackDuffelMilitaryMedical, category: Backpack, tier: 1 }
+      - { id: N14MedkitCombatFilled, category: Medical, tier: 1 }
+      - { id: DefibrillatorCompact, category: Medical, tier: 1 }
+      - { id: N14HandheldHealthAnalyzer, category: Medical, tier: 1 }
+      - { id: N14Traumapack, category: Medical, tier: 1 }
+      - { id: N14Ointment10, category: Medical, tier: 1 }
+      - { id: N14Antidote, category: Medical, tier: 1 }
+      - { id: N14SmellingSalts, category: Medical, tier: 1 }
+      - { id: Bloodpack, category: Medical, tier: 1 }
+      - { id: N14SuperStimpak, category: Medical, tier: 1 }
+      - { id: N14Stimpak, category: Medical, tier: 1 }
+      - { id: N14RadAwayBloodbag, category: Medical, tier: 1 }
+      - { id: N14CleanGauze10, category: Medical, tier: 1 }
+      - { id: N14BoxCardboardMREBoxCFilled, category: Utility, tier: 1 }
+      - { id: Torch, category: Utility, tier: 1 }
+    - name: Tier 1 - Trooper / Specialist allocation
+      entries:
+      - { id: N14ClothingUniformNCRRecon, category: Uniform, tier: 1 }
+      - { id: N14ClothingHeadHatNCRBeretRecon, category: Helmet, tier: 1 }
+      - { id: N14ClothingNeckCloakNCR, category: Neck, tier: 1 }
+      - { id: N14ClothingOuterNCRVestCoatBlack, category: Armor, tier: 1 }
+      - { id: N14ClothingMaskBlackBalaclava, category: Mask, tier: 1 }
+      - { id: N14ClothingEyesNCRNVGs, category: Eyes, tier: 1 }
+      - { id: ClothingBeltNCR, category: Belt, tier: 1 }
+    # Fixed roundstart issue traced from NCR job startingGear records.
+    - name: Tier 1 - Trooper / Specialist allocation
+      entries:
+      - { id: N14ClothingBackpackNCR, category: Backpack, tier: 1 }
+      - { id: N14ClothingHeadsetNCR, category: Radio, tier: 1 }
+      - { id: N14ClothingUniformNCRDesert, category: Uniform, tier: 1 }
+      - { id: N14ClothingUniformNCRMedicVariant, category: Uniform, tier: 1 }
+      - { id: N14ClothingBootsLeatherFilled, category: Boots, tier: 1 }
+      - { id: N14ClothingHeadHatNCRHelmetNoCover, category: Helmet, tier: 1 }
+      - { id: N14ClothingHeadHatNCRSidecap, category: Helmet, tier: 1 }
+      - { id: N14ClothingHeadHatNCRBeretMedic, category: Helmet, tier: 1 }
+      - { id: N14ClothingHandsGlovesCombat, category: Gloves, tier: 1 }
+      - { id: N14ClothingEyesGlassesWelding, category: Eyes, tier: 1 }
+      - { id: N14ClothingOuterNCREngineerVest, category: Armor, tier: 1 }
+      - { id: N14ClothingOuterCoatFollowersArmored, category: Armor, tier: 1 }
+      - { id: MisfitsClothingOuterNCRMedicLabCoat, category: Armor, tier: 1 }
+      - { id: MisfitsNCREnhancedVest, category: Armor, tier: 1 }
+      - { id: MisfitsNCRPouchedCombatArmor, category: Armor, tier: 1 }
+      - { id: ClothingNeckPinNCRRecruit, category: Neck, tier: 1 }
+      - { id: ClothingNeckPinNCRPrivate, category: Neck, tier: 1 }
+      - { id: ClothingNeckPinNCRPrivate1st, category: Neck, tier: 1 }
+      - { id: ClothingNeckPinNCRSpecialist, category: Neck, tier: 1 }
+    - name: Tier 2 - Heavy Trooper allocation
+      entries:
+      - { id: N14Stimpak, category: Medical, tier: 2 }
+      - { id: N14SuperStimpak, category: Medical, tier: 2 }
+      - { id: N14RadAwayBloodbag, category: Medical, tier: 2 }
+      - { id: N14CleanGauze10, category: Medical, tier: 2 }
+      - { id: N14ClothingBootsCombatFilled, category: Boots, tier: 2 }
+      - { id: MisfitsNCRHeavyTrooperSalvagedPowerArmorT45, category: Armor, tier: 2, jobs: [ NCRHeavyTrooper ], requiredJob: Heavy Trooper }
+      - { id: ClothingNeckPinNCRCorporal, category: Neck, tier: 2 }
+    - name: Tier 3 - Squad Leader / Medical Officer allocation
+      entries:
+      - { id: MisfitsNCRMSLUniform, category: Uniform, tier: 3 }
+      - { id: MisfitsNCRMSLHelmet, category: Helmet, tier: 3 }
+      - { id: MisfitsNCRMSLGloves, category: Gloves, tier: 3 }
+      - { id: MisfitsNCRMSLBoots, category: Boots, tier: 3 }
+      - { id: MisfitsNCRMSLMask, category: Mask, tier: 3 }
+      - { id: MisfitsNCRMSLArmor, category: Armor, tier: 3 }
+      - { id: MisfitsClothingOuterNCRTrenchCoat, category: Armor, tier: 3 }
+      - { id: N14ClothingOfficerUniformNCRDesert, category: Uniform, tier: 3 }
+      - { id: MisfitsNCRHeavyCombatArmor, category: Armor, tier: 3 }
+      - { id: MisfitsNCRCommandArmor, category: Armor, tier: 3 }
+      - { id: MisfitsNCREliteCombatArmor, category: Armor, tier: 3 }
+      - { id: ClothingBeltRevolver, category: Belt, tier: 3 }
+      - { id: MisfitsNCRHeavyTrooperLeadPowerArmorT51, category: Armor, tier: 3, jobs: [ NCRHeavyTrooperLead ], requiredJob: Heavy Trooper Lead }
+      - { id: N14ClothingEyesGlassesPilot, category: Eyes, tier: 3 }
+      - { id: ClothingNeckPinNCRSergeant1st, category: Neck, tier: 3 }
+      - { id: N14ClothingBackpackMilitary, category: Backpack, tier: 3 }
+      - { id: N14ClothingNeckMantleNCR, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCRSergeant, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCRStaffSergeant, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCRMasterSergeant, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCR1stSergeant, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCRWarrantOfficer, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCRChiefWarrantOfficer2, category: Neck, tier: 3 }
+      - { id: ClothingNeckPinNCRChiefWarrantOfficer3, category: Neck, tier: 3 }
+    - name: Tier 4 - Executive Officer / Platoon Leader allocation
+      entries:
+      - { id: MisfitsNCROfficerArmor, category: Armor, tier: 4 }
+      - { id: MisfitsClothingOuterNCRCommissarPlate, category: Armor, tier: 4 }
+      - { id: MisfitsClothingNeckNCRCommissarJacket, category: Neck, tier: 4 }
+      - { id: ClothingMaskCommissar, category: Mask, tier: 4 }
+      - { id: N14ClothingHeadHatNCRCommissarHat, category: Helmet, tier: 4 }
+      - { id: N14ClothingHeadHatNCRBeretOfficer, category: Helmet, tier: 4 }
+      - { id: N14ClothingOuterNCRDressJacket, category: Armor, tier: 4 }
+      - { id: ClothingEyesGlassesSunglasses, category: Eyes, tier: 4 }
+      - { id: LuxuryPen, category: Utility, tier: 4 }
+      - { id: ClothingNeckPinNCRSecondLieutenant, category: Neck, tier: 4 }
+      - { id: ClothingNeckPinNCRFirstLieutenant, category: Neck, tier: 4 }
+      - { id: ClothingNeckPinNCRCaptain, category: Neck, tier: 4 }
+    - name: Tier 5 - Commander / Requisition Officer allocation
+      entries:
+      - { id: N14ClothingOuterNCRDressJacketCO, category: Armor, tier: 5 }
+      - { id: MisfitsClothingHeadsetNCRMaster, category: Radio, tier: 5 }
+      - { id: ClothingNeckPinNCRMajor, category: Neck, tier: 5 }
+      - { id: N14ClothingNeckROmantleNCR, category: Neck, tier: 5 }
+      - { id: ClothingNeckPinNCRLtColonel, category: Neck, tier: 5 }
+      - { id: BoxFolderClipboard, category: Utility, tier: 5 }
+      - { id: N14Binoculars, category: Utility, tier: 5 }
+      - { id: SyndicateWhistle, category: Utility, tier: 5 }
+      - { id: SprayPaintDesertTan, category: Utility, tier: 5 }
+    replenishment:
+    - currency: Bottlecaps
+    - currency: NCRDollars
+    replenishmentPrompt: caps or NCR dollars
+    replenishmentInterval: 30m
+    replenishmentCosts:
+      1: 1
+      2: 2
+      3: 5
+      4: 10
+      5: 20
+    blueprintCategories: [ N14BlueprintNCRArmorT1, N14BlueprintNCRArmorT2, N14BlueprintNCRArmorT3, N14BlueprintNCRArmorT4 ]
+    blueprintEntryOverrides:
+      MisfitsShackledBoots: { category: Boots }
+      N14ClothingHeadHatNCRHelmetMetalDesert: { category: Helmet }
+      N14ClothingHeadHatNCRHelmetMetalSnow: { category: Helmet }
+      N14ClothingHeadHatNCRHelmetMetalWoods: { category: Helmet }
+      N14ClothingOuterNCRVestDesert: { category: Armor }
+      N14ClothingOuterNCRVestSnow: { category: Armor }
+      N14ClothingOuterNCRVestWoods: { category: Armor }
+      # NCR Army camouflage issue. This remains a T2 NCR item, not Ranger stock.
+      N14ClothingHeadHatNCRHelmetMetalGhillie: { category: Helmet }
+      N14ClothingHeadHatNCRHelmetMetalMedic: { category: Helmet }
+      N14ClothingHeadHatNCRHelmetMetalMilitaryPolice: { category: Helmet }
+      N14ClothingHeadHatNCRHelmetMetalRadioSnow: { category: Helmet }
+      N14ClothingHeadHatNCRHelmetMetalRadioWood: { category: Helmet }
+      N14ClothingOuterNCRCFvest: { category: Armor }
+      N14ClothingOuterNCRPlateDesert: { category: Armor }
+      N14ClothingOuterNCRPlateWoods: { category: Armor }
+      N14ClothingOuterNCRPouchedVestDesert: { category: Armor }
+      N14ClothingOuterNCRPouchedVestSnow: { category: Armor }
+      N14ClothingOuterNCRPouchedVestWoods: { category: Armor }
+      N14ClothingHeadHatNCRCombatHelmet: { category: Helmet }
+      N14ClothingHeadHatRangerHelmet: { enabled: false }
+      N14ClothingHeadHatRangerHelmetDesert: { enabled: false }
+      N14ClothingHeadHatRangerHelmetOld: { enabled: false }
+      N14ClothingOuterNCRCombatArmor: { category: Armor }
+      N14ClothingOuterNCRFlakVestOpen: { enabled: false }
+      N14ClothingOuterRangerCoat: { enabled: false }
+      N14ClothingOuterRangerDuster: { enabled: false }
+      N14ClothingOuterRangerFieldArmor: { enabled: false }
+      N14ClothingOuterRangerVest: { enabled: false }
+      N14ClothingHeadHatCombatHelmetMK2: { category: Helmet }
+      N14ClothingHeadHatRangerHelmetElite: { enabled: false }
+      N14ClothingOuterNCRCombatArmorMK2: { category: Armor }
+      N14ClothingOuterPowerArmorT51NCR: { enabled: false }
+      N14ClothingOuterRangerCombat: { enabled: false }
+      N14ClothingOuterRangerElite: { enabled: false }
+    authorityTierNames:
+      1: Tier 1 - Trooper / Specialist allocation
+      2: Tier 2 - Heavy Trooper allocation
+      3: Tier 3 - Squad Leader / Medical Officer allocation
+      4: Tier 4 - Executive Officer / Platoon Leader allocation
+      5: Tier 5 - Commander / Requisition Officer allocation
+    authorityTierAccess:
+      1: [ NCR ]
+      2: [ NCRSGT ]
+      3: [ NCRLT ]
+      4: [ NCRCaptain ]
+      5: [ NCRCaptain ]

@@ -4,7 +4,10 @@
     children:
       - !type:NestedSelector
           tableId: M14WeaponLootTier5_LaserPistol
+          weight: 2
       - !type:NestedSelector
           tableId: M14WeaponLootTier5_PlasmaPistol
+          weight: 4
       - !type:NestedSelector
           tableId: M14WeaponLootTier5_OtherPistol
+          weight: 5

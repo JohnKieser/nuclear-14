@@ -66,6 +66,16 @@
       params:
         volume: -3
         maxDistance: 10
+#  - type: NPCTamingOnTouchBehaviour
+#    follow: true
+#    persistent: true
+#    tameChance: 0.5
+#    oneTry: false
+#    successPopup: This pet is your friend now!
+#    deniedPopup: This pet refused to be your friend.
+#    whitelist:
+#      components:
+#      - HumanoidAppearance # annoying dumb logic
  #- type: Reproductive
    #breedChance: 0.05
    #birthPopup: reproductive-birth-popup
@@ -80,16 +90,6 @@
  # - type: Tag
  #   tags:
 #    - Molerat
-  # - type: NPCTamingOnTouchBehaviour
-    # follow: true
-    # persistent: true
-    # tameChance: 0.5
-    # oneTry: false
-    # successPopup: This pet is your friend now!
-    # deniedPopup: This pet refused to be your friend.
-    # whitelist:
-      # components:
-      # - HumanoidAppearance
 
 - type: entity
   name: pigrat

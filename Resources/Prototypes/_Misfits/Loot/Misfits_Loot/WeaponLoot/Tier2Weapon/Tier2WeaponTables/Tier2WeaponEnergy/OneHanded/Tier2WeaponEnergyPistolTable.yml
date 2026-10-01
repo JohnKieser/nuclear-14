@@ -5,7 +5,6 @@
     children:
     - !type:EntSelector
       id: N14WeaponLaserPistolRecharger
-      weight: 2
 # need like crude/makeshift pistols
 - type: entityTable
   id: M14WeaponLootTier2_PlasmaPistol

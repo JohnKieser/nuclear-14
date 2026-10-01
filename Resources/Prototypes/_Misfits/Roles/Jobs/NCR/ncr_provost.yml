@@ -27,6 +27,8 @@
     - NCRLT
     - NCRCaptain
     - NCRMajor
+    - NCRRanger
+    - NCRProvost
   special:
     - !type:AddComponentSpecial
       components:
@@ -41,13 +43,13 @@
   equipment:
     wallet: N14Wallet
     head: N14ClothingHeadHatNCRSlouch
+    ears: MisfitsClothingHeadsetNCRMaster
     back: N14ClothingBackpackNCR
     jumpsuit: N14ClothingMPUniformNCRDesert
     outerClothing: N14ClothingOuterNCRVestCoatBlackArmored
     shoes: N14ClothingBootsCombatFilled
     belt: ClothingBeltNCR
     eyes: ClothingEyesGlassesSunglasses
-    ears: MisfitsClothingHeadsetNCRMaster
     pocket2: NCRMPKit_Set
     id: N14NCRProvostPipboy
   innerClothingSkirt: N14ClothingOfficerUniformNCRDesert

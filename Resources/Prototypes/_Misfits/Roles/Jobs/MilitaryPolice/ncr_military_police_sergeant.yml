@@ -40,13 +40,13 @@
   id: NCRMilitaryPoliceSergeantGear
   equipment:
     wallet: N14Wallet
+    ears: N14ClothingHeadsetNCR
     back: N14ClothingBackpackNCR
     jumpsuit: N14ClothingMPUniformNCRDesert
     outerClothing: MisfitsNCRMPCombatArmor
     shoes: N14ClothingBootsCombatFilled
     belt: ClothingBeltNCR
     eyes: ClothingEyesGlassesSunglasses
-    ears: N14ClothingHeadsetNCR
     pocket1: NCRMPKit_Set
     id: N14IDNCRDogtagMPSergeant
   innerClothingSkirt: N14ClothingOfficerUniformNCRDesert

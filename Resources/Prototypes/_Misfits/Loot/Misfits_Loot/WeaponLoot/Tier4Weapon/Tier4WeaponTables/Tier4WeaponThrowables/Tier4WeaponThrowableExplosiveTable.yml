@@ -10,8 +10,10 @@
       id: N14KettleBomb
     - !type:EntSelector
       id: N14Dynamite
+      weight: 5
     - !type:EntSelector
       id: N14NukaNade
+      weight: 5
     - !type:EntSelector
       id: N14NukaCocktail
     - !type:EntSelector
@@ -22,5 +24,7 @@
       id: N14Firecracker
     - !type:EntSelector
       id: N14PlasmaGrenade
+      weight: 2
     - !type:EntSelector
       id: N14CryoGrenade
+      weight: 3

@@ -40,7 +40,4 @@ faction-war-join-already-joined = You have already joined a war on the side of {
 faction-war-join-faction-wide = Enlist Entire Faction
 faction-war-join-faction-wide-hint = As highest-ranking { $faction } member online, you can enlist all faction members at once.
 
-# Auto-ceasefire - #Misfits Add
-faction-war-auto-ceasefire-announcement = AUTO-CEASEFIRE: The war between { $aggressor } and { $target } has ended after 30 minutes. A ceasefire is now in effect.
-
 faction-war-cmd-desc = Opens the Faction War panel.

@@ -5,13 +5,13 @@
     children:
     - !type:EntSelector
       id: N14WeaponLaserPistol
-      weight: 3
+      weight: 2
     - !type:EntSelector
       id: N14WeaponLaserRevolver
-      weight: 3
+      weight: 2
     - !type:EntSelector
       id: N14WeaponLaserPistolRecharger
-      weight: 2
+      weight: 1
 
 - type: entityTable
   id: M14WeaponLootTier4_PlasmaPistol
@@ -19,10 +19,10 @@
     children:
     - !type:EntSelector
       id: N14WeaponPlasmaPistol
-      weight: 2
+      weight: 4
     - !type:EntSelector
       id: N14WeaponPlasmaDefender
-      weight: 2
+      weight: 4
 
 
 - type: entityTable

@@ -126,6 +126,12 @@ public sealed partial class FactionWarWindow : FancyWindow
         TargetGroupSelector.Clear();
         TargetWastelanderSelector.Clear();
 
+        // Keep every target category deliberately unselected until the player picks one.
+        // OptionButton otherwise selects the first real target as it is added.
+        TargetFactionSelector.AddItem("Select a faction...", -1);
+        TargetGroupSelector.AddItem("Select a group...", -1);
+        TargetWastelanderSelector.AddItem("Select a wastelander...", -1);
+
         foreach (var target in data.FactionTargets)
         {
             _factionTargetItems.Add(target);
@@ -148,25 +154,7 @@ public sealed partial class FactionWarWindow : FancyWindow
         TargetGroupSelector.Disabled = _groupTargetItems.Count == 0;
         TargetWastelanderSelector.Disabled = _wastelanderTargetItems.Count == 0;
 
-        if (_factionTargetItems.Count > 0)
-        {
-            _selectedTargetKind = WarTargetKind.Faction;
-            TargetFactionSelector.SelectId(0);
-        }
-        else if (_groupTargetItems.Count > 0)
-        {
-            _selectedTargetKind = WarTargetKind.Group;
-            TargetGroupSelector.SelectId(0);
-        }
-        else if (_wastelanderTargetItems.Count > 0)
-        {
-            _selectedTargetKind = WarTargetKind.Wastelander;
-            TargetWastelanderSelector.SelectId(0);
-        }
-        else
-        {
-            _selectedTargetKind = WarTargetKind.Faction;
-        }
+        _selectedTargetKind = WarTargetKind.Faction;
 
         DeclareWarButton.Disabled = _factionTargetItems.Count == 0
                                    && _groupTargetItems.Count == 0

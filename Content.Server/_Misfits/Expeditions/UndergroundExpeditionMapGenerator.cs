@@ -2769,8 +2769,8 @@ public sealed class UndergroundExpeditionMapGenerator : EntitySystem
                     var cacheY = room.Y + 1 + rng.Next(innerH);
                     if (occupiedTiles.Contains((cacheX, cacheY))) continue;
                     var cacheSpawner = rng.Next(2) == 0
-                        ? "M14ExpeditionWeaponLootTier1Guaranteed"
-                        : "M14ExpeditionWeaponLootTier2Guaranteed";
+                        ? "M14ExpeditionWeaponLootTier3Guaranteed"
+                        : "M14ExpeditionWeaponLootTier5Guaranteed";
                     SpawnAt(cacheSpawner, gridUid, grid, cacheX, cacheY);
                     occupiedTiles.Add((cacheX, cacheY));
                     break;
@@ -3103,8 +3103,8 @@ public sealed class UndergroundExpeditionMapGenerator : EntitySystem
         {
             var (lootX, lootY) = room.Center;
             var lootSpawner = rng.Next(2) == 0
-                ? "M14ExpeditionWeaponLootTier2Guaranteed"
-                : "M14ExpeditionWeaponLootTier3Guaranteed";
+                ? "M14ExpeditionWeaponLootTier4Guaranteed"
+                : "M14ExpeditionWeaponLootTier5Guaranteed";
             SpawnAt(lootSpawner, gridUid, grid, lootX, lootY);
         }
     }
