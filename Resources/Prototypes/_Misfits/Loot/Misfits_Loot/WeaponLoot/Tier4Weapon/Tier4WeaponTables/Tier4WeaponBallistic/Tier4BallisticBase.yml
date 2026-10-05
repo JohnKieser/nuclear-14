@@ -16,7 +16,7 @@
           weight: 5
       - !type:NestedSelector
           tableId: M14WeaponLootTier4_GunsBulletSMG
-          weight: 2
+          weight: 3
       - !type:NestedSelector
           tableId: M14WeaponLootTier4_GunsBulletPistol
           weight: 2

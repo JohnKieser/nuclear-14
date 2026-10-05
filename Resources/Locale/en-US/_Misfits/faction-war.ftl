@@ -11,7 +11,6 @@ faction-war-no-active-wars = No active wars.
 faction-war-declare-header = Declare War
 faction-war-target-faction-label = Target Faction
 faction-war-target-group-label = Target Group
-faction-war-target-wastelander-label = Target Wastelander
 faction-war-casus-belli-label = Casus Belli (minimum 5 words)
 faction-war-casus-belli-placeholder = State your justification for war...
 faction-war-declare-button = Declare War

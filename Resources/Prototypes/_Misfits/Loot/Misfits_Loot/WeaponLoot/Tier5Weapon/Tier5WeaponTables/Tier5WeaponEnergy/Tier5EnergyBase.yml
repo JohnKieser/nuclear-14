@@ -10,4 +10,4 @@
           weight: 7
       - !type:NestedSelector
           tableId: M14WeaponLootTier5_EnergyPistol
-          weight: 5
+          weight: 4

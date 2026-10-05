@@ -393,8 +393,6 @@ public sealed class FactionWarSystem : EntitySystem
             MyWars = new List<PlayerWarEntry>(),
         };
 
-        var groupedEntities = BuildGroupedEntitySet();
-
         // Populate faction targets.
         foreach (var faction in AutoEnlistFactions.OrderBy(GetFactionDisplayName))
         {
@@ -426,7 +424,8 @@ public sealed class FactionWarSystem : EntitySystem
             });
         }
 
-        // Populate wastelander targets.
+        // Online-player data is retained for the admin force-war panel; individual
+        // wastelanders are intentionally not valid player-war declaration targets.
         foreach (var session in _playerManager.Sessions)
         {
             if (session.Status != SessionStatus.InGame || session.UserId == player.UserId)
@@ -447,26 +446,10 @@ public sealed class FactionWarSystem : EntitySystem
                 JobName = jobName,
             });
 
-            var netEntity = GetNetEntity(entity);
-            if (groupedEntities.Contains(netEntity))
-                continue;
-
-            if (TryGetAutoEnlistFaction(entity, out _))
-                continue;
-
-            data.WastelanderTargets.Add(new WarTargetInfo
-            {
-                Kind = WarTargetKind.Wastelander,
-                Id = session.UserId.ToString(),
-                DisplayName = string.IsNullOrWhiteSpace(jobName)
-                    ? Name(entity)
-                    : $"{Name(entity)} ({jobName})",
-            });
         }
 
         data.OnlinePlayers.Sort((a, b) => string.Compare(a.CharacterName, b.CharacterName, StringComparison.Ordinal));
         data.GroupTargets.Sort((a, b) => string.Compare(a.DisplayName, b.DisplayName, StringComparison.Ordinal));
-        data.WastelanderTargets.Sort((a, b) => string.Compare(a.DisplayName, b.DisplayName, StringComparison.Ordinal));
 
         // Check 30-minute cooldown.
         var elapsed = _gameTiming.CurTime - _roundStartTime;
@@ -558,7 +541,7 @@ public sealed class FactionWarSystem : EntitySystem
             return;
         }
 
-        if (!TryGetWarTargetRepresentative(msg.TargetKind, msg.TargetId, player.UserId, out var targetSession, out var targetEntity, out var targetDisplayName))
+        if (!TryGetWarTargetRepresentative(msg.TargetKind, msg.TargetId, out var targetSession, out var targetEntity, out var targetDisplayName))
         {
             SendResult(player, false, "Target is not valid or is not online.");
             return;
@@ -2031,22 +2014,9 @@ public sealed class FactionWarSystem : EntitySystem
             SendPanelData(session);
     }
 
-    private HashSet<NetEntity> BuildGroupedEntitySet()
-    {
-        var grouped = new HashSet<NetEntity>();
-        foreach (var group in _groupSystem.GetRaidTargets())
-        {
-            foreach (var member in group.Members)
-                grouped.Add(member.Entity);
-        }
-
-        return grouped;
-    }
-
     private bool TryGetWarTargetRepresentative(
         WarTargetKind kind,
         string targetId,
-        NetUserId requesterUserId,
         out ICommonSession targetSession,
         out EntityUid targetEntity,
         out string targetDisplayName)
@@ -2066,24 +2036,6 @@ public sealed class FactionWarSystem : EntitySystem
                 }
 
                 return TryGetGroupRepresentative(groupId, out targetSession, out targetEntity, out targetDisplayName);
-
-            case WarTargetKind.Wastelander:
-                if (!Guid.TryParse(targetId, out var userGuid) ||
-                    !TryGetSessionForPlayer(new NetUserId(userGuid), out targetSession) ||
-                    targetSession.AttachedEntity is not { } wastelanderEntity ||
-                    targetSession.UserId == requesterUserId ||
-                    TryGetAutoEnlistFaction(wastelanderEntity, out _) ||
-                    BuildGroupedEntitySet().Contains(GetNetEntity(wastelanderEntity)))
-                {
-                    targetSession = null!;
-                    targetEntity = default;
-                    targetDisplayName = string.Empty;
-                    return false;
-                }
-
-                targetEntity = wastelanderEntity;
-                targetDisplayName = Name(wastelanderEntity);
-                return true;
 
             default:
                 targetSession = null!;

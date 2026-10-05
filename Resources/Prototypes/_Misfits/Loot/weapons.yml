@@ -21,6 +21,17 @@
     # delete it with Show Spawns, like the existing N14 map spawners.
     deleteSpawnerAfterSpawn: false
 
+- type: entity
+  name: Weapon Cache Room Spawner
+  suffix: Tiered
+  id: M14WeaponLootCacheRoomSpawner
+  parent: MarkerBase
+  components:
+  - type: EntityTableSpawner
+    table: !type:NestedSelector
+      tableId: M14WeaponLootCacheRoom
+      prob: 1
+
 # The broad world distribution deliberately falls off hard at higher tiers.
 # Add map markers rather than fixed guns to keep a location's exact loot unknown.
 # Every concrete N14 and Misfits weapon is represented in a tier. Only abstract base
@@ -31,16 +42,27 @@
     children:
     - !type:NestedSelector
       tableId: M14WeaponLootTier1
-      weight: 5
+      weight: 45
     - !type:NestedSelector
       tableId: M14WeaponLootTier2
-      weight: 5
+      weight: 30
     - !type:NestedSelector
       tableId: M14WeaponLootTier3
-      weight: 5
+      weight: 25
     - !type:NestedSelector
       tableId: M14WeaponLootTier4
-      weight: 80
+      weight: 15
     - !type:NestedSelector
       tableId: M14WeaponLootTier5
-      weight: 70
+      weight: 5
+
+- type: entityTable
+  id: M14WeaponLootCacheRoom
+  table: !type:GroupSelector
+    children:
+    - !type:NestedSelector
+      tableId: M14WeaponLootTier4
+      weight: 30
+    - !type:NestedSelector
+      tableId: M14WeaponLootTier5
+      weight: 5

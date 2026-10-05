@@ -25,8 +25,10 @@
     children:
     - !type:EntSelector
       id: N14WeaponLaserRifleCrude
+      weight: 5
     - !type:EntSelector
       id: N14WeaponLaserRifleMakeshift
+      weight: 5
 
 - type: entityTable
   id: M14WeaponLootTier2_PlasmaRifleSemi
