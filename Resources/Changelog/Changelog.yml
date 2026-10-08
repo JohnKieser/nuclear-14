@@ -12335,3 +12335,10 @@ Entries:
   id: 6510
   time: '2026-10-08T22:10:40.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2008
+- author: Marabout2
+  changes:
+    - type: Tweak
+      message: '[BALANCE] Tweaked the wield delay of the BAR that neutered it to zero'
+  id: 6511
+  time: '2026-10-08T22:22:25.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2066
