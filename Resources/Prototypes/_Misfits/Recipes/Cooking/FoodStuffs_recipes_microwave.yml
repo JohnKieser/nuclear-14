@@ -110,7 +110,7 @@
   reagents:
     Sugar: 5
   solids:
-    SheetPaper: 1
+    SheetPaper1: 1
 
 #- Spicy n Sweet Skewer: 2 jalapeno, 2 black berry, 1 skewer -> 5 sec
 - type: microwaveMealRecipe
