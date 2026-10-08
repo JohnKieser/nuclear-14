@@ -12326,3 +12326,12 @@ Entries:
   id: 6509
   time: '2026-10-08T21:40:25.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2062
+- author: Marabout
+  changes:
+    - type: Tweak
+      message: >-
+        [LEGION] Reduce the M240B's ROE from 8 to 5.5, realigning it with the
+        rest of the balance regarding 5.56 and 7.62 caliber.
+  id: 6510
+  time: '2026-10-08T22:10:40.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2008
