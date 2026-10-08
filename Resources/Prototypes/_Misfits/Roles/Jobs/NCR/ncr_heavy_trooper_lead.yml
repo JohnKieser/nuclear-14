@@ -54,7 +54,9 @@
     ears: N14ClothingHeadsetNCR
     back: N14ClothingBackpackNCR
     jumpsuit: N14ClothingOfficerUniformNCRDesert
+    outerClothing: MisfitsNCRHeavyTrooperLeadPowerArmorT51
     shoes: N14ClothingBootsCombatFilled
     belt: ClothingBeltNCR
+    pocket1: NCRHeavyTrooperLeadLoadoutKits
     id: N14IDNCRDogtagWS
   innerClothingSkirt: N14ClothingOfficerUniformNCRDesert

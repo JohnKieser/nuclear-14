@@ -50,13 +50,16 @@
     shoes: N14ClothingBootsCombatFilled
     belt: ClothingBeltNCR
     eyes: ClothingEyesGlassesSunglasses
-    pocket2: NCRMPKit_Set
     id: N14NCRProvostPipboy
   innerClothingSkirt: N14ClothingOfficerUniformNCRDesert
   satchel: N14ClothingBackpackSatchelNCRFilled
   storage:
     back:
       - N14BoxPlasticFilledMilitaryNCR
+      - N14WeaponShotgunAuto
+      - Handcuffs
+      - TearGasGrenade
+      - MisfitsNCRMPShockBaton
 
 - type: playTimeTracker
   id: NCRProvost

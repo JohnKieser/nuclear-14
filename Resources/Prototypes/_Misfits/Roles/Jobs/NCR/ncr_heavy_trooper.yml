@@ -47,8 +47,10 @@
     ears: N14ClothingHeadsetNCR               # NCR radio earpiece
     back: N14ClothingBackpackNCR                 # #Misfits Fix - Minigun moved to pocket1 so custom backpack selection no longer overwrites it
     jumpsuit: N14ClothingOfficerUniformNCRDesert  # standard NCR officer uniform under the suit
+    outerClothing: MisfitsNCRHeavyTrooperSalvagedPowerArmorT45
     shoes: N14ClothingBootsCombatFilled
     belt: ClothingBeltNCR
+    pocket1: NCRHeavyTrooperLoadoutKits
     id: N14IDNCRDogtagWS                      # Specialist-tier dogtag
   innerClothingSkirt: N14ClothingOfficerUniformNCRDesert
 

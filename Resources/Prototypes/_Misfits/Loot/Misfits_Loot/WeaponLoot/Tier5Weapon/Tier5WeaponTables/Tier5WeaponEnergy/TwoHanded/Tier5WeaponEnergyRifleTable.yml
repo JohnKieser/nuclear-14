@@ -3,15 +3,6 @@
   table: !type:GroupSelector
     children:
     - !type:EntSelector
-      id: N14WeaponLaserRifleAuto
-      weight: 10
-    - !type:EntSelector
-      id: N14WeaponLaserRCW
-      weight: 10
-    - !type:EntSelector
-      id: N14WeaponLaserRifleAER12
-      weight: 10
-    - !type:EntSelector
       id: N14WeaponLaserRifleAER15 # the fuck lmao?
       weight: 5
     - !type:EntSelector
@@ -30,50 +21,17 @@
       weight: 10
 
 - type: entityTable
-  id: M14WeaponLootTier5_OtherRifleAuto
-  table: !type:GroupSelector
-    children:
-    - !type:EntSelector
-      id: N14WeaponFlamer
-      weight: 2
-    - !type:EntSelector
-      id: N14WeaponGaussRifle
-      weight: 10
-
-
-- type: entityTable
   id: M14WeaponLootTier5_LaserRifleSemi
   table: !type:GroupSelector
     children:
     - !type:EntSelector
-      id: N14WeaponLaserRifleCrude
-      weight: 5
-    - !type:EntSelector
-      id: N14WeaponLaserRifleMakeshift
-      weight: 5
-    - !type:EntSelector
-      id: N14WeaponLaserRifleWattz2000
-      weight: 1
-    - !type:EntSelector
       id: N14WeaponLaserRifleWattz3000
       weight: 5
-    - !type:EntSelector
-      id: N14WeaponLaserRifleRecharger
-      weight: 1
-    - !type:EntSelector
-      id: N14WeaponLaserRifle
-      weight: 1
 
 - type: entityTable
   id: M14WeaponLootTier5_PlasmaRifleSemi
   table: !type:GroupSelector
     children:
-    - !type:EntSelector
-      id: N14WeaponPlasmaRifleCrude
-      weight: 1
-    - !type:EntSelector
-      id: N14WeaponPlasmaRifle
-      weight: 5
     - !type:EntSelector
       id: N14WeaponPlasmaRifleUrban
       weight: 5
@@ -86,11 +44,8 @@
   table: !type:GroupSelector
     children:
     - !type:EntSelector
-      id: N14WeaponPulseCarbine # light pulse
-      weight: 1
-    - !type:EntSelector
       id: N14WeaponPulseRifle #YK42b omg!!! i missed u sugoi!!!!
-      weight: 10
-    - !type:EntSelector
-      id: N14WeaponGaussRifle # hai
-      weight: 10
+      weight: 5
+    # - !type:EntSelector
+    #   id: N14WeaponGaussRifle # hai
+    #   weight: 5

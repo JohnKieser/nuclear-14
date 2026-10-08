@@ -3,6 +3,9 @@
   id: MisfitsMobBrahdo_Base
   abstract: true
   components:
+  - type: NpcFactionMember
+    factions:
+    - SimpleNeutral
   - type: OpenSlot
     openSlots:
       - outerClothing
@@ -79,12 +82,12 @@
   - type: SlowOnDamage
     speedModifierThresholds:
       50: .95 # dont get hit chuds
-      100: .75
-      150: .5
-      180: .25 # lol
+      100: .90
+      150: .80
+      180: .70 # lol
   - type: MovementSpeedModifier
-    baseWalkSpeed : 4.5
-    baseSprintSpeed : 4.5
+    baseWalkSpeed : 5.0
+    baseSprintSpeed : 5.0
   - type: FootstepModifier
     footstepSoundCollection:
       collection: Horsestep
@@ -97,7 +100,7 @@
     maximumEntitiesSpawned: 1
     ignoreSpawnBlock: true # Forge-Change
   - type: Reproductive
-    breedChance: 0.005 # Low
+    breedChance: 0.0001 # Low
     birthPopup: reproductive-birth-popup
     makeOffspringInfant: false
     partnerWhitelist:
@@ -182,12 +185,12 @@
     critThreshold: 150
   - type: SlowOnDamage
     speedModifierThresholds:
-      30: .95 # dont get hit chuds
-      80: .75
-      100: .5
+      30: .90 # dont get hit chuds
+      80: .80
+      100: .65
   - type: MovementSpeedModifier
-    baseWalkSpeed : 6.5
-    baseSprintSpeed : 6.5
+    baseWalkSpeed : 6.75
+    baseSprintSpeed : 6.75
   - type: BrahdoSpooked
     spookDuration: 5
     buckChance: 0.35 # pussayyyy
@@ -221,12 +224,12 @@
     critThreshold: 400
   - type: SlowOnDamage
     speedModifierThresholds:
-      100: .80
-      150: .75
-      180: .50
+      100: .95
+      150: .90
+      180: .85
   - type: MovementSpeedModifier
-    baseWalkSpeed : 5.0
-    baseSprintSpeed : 5.0
+    baseWalkSpeed : 5.25 # if stamina was a thing this would be lower and compensate with higher stamina
+    baseSprintSpeed : 5.25
   - type: BrahdoSpooked
     spookDuration: 1
     buckChance: 0.0 # it watched so many pg-13 horror movies
@@ -273,10 +276,10 @@
   - type: SlowOnDamage
     speedModifierThresholds: # legate lanius ass fucking horse
       200: .95
-      300: .75
+      300: .90
   - type: MovementSpeedModifier
-    baseWalkSpeed : 3.0
-    baseSprintSpeed : 3.0
+    baseWalkSpeed : 4.5
+    baseSprintSpeed : 4.5
   - type: Butcherable
     spawned:
     - id: MisfitFoodMeatBrahdoRaw
@@ -312,8 +315,8 @@
       150: .5
       180: .25
   - type: MovementSpeedModifier
-    baseWalkSpeed : 4.5
-    baseSprintSpeed : 4.5
+    baseWalkSpeed : 5.0
+    baseSprintSpeed : 5.0
   - type: Butcherable
     spawned:
     - id: N14FoodMeatRadRaw

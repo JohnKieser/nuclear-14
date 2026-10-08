@@ -12,6 +12,13 @@ namespace Content.Shared._RMC.Vendors;
 [Access(typeof(SharedCMAutomatedVendorSystem))]
 public sealed partial class CMAutomatedVendorComponent : Component
 {
+    /// <summary>
+    /// Optional runtime stock pool shared by every automated vendor with the same identifier.
+    /// When omitted, this vendor retains independent stock, resupply, and equipment storage.
+    /// </summary>
+    [DataField]
+    public string? SharedPool;
+
     [DataField, AutoNetworkedField]
     public List<CMVendorSection> Sections = new();
 

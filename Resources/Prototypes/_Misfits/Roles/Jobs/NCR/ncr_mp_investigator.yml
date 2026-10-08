@@ -49,8 +49,15 @@
     outerClothing: MisfitsNCRMPCombatArmor
     pocket1: NCRMPinvestigatorKits
     hands: N14ClothingHandsGlovesCombat
+    belt: ClothingBeltNCR
     id: N14IDNCRDogtagMPInvestigator
     eyes: ClothingEyesGlassesSunglasses
+  storage:
+    back:
+      - N14WeaponShotgunAuto
+      - Handcuffs
+      - TearGasGrenade
+      - MisfitsNCRMPShockBaton
 
 - type: playTimeTracker
   id: NCRMPinvestigator

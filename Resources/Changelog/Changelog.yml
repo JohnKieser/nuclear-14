@@ -12121,3 +12121,171 @@ Entries:
   id: 6488
   time: '2026-09-30T23:57:31.0000000+00:00'
   url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2025
+- author: JohnKieser
+  changes:
+    - type: Tweak
+      message: 'brahdos run faster and have reduced breeding chance. '
+    - type: Tweak
+      message: exped loot adjusted. Expect more changes in the future related to loot.
+    - type: Fix
+      message: scrambler bike is no longer slow
+  id: 6489
+  time: '2026-10-01T21:40:07.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2029
+- author: Enkidienne
+  changes:
+    - type: Tweak
+      message: >-
+        Changed legion armor sprites (decanus and legionnary) for pictures see
+        the dump thread on discord. 
+  id: 6490
+  time: '2026-10-01T21:45:29.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2027
+- author: Enkidienne
+  changes:
+    - type: Add
+      message: The M7 Spear to the NCR BP lineup alongside 6.8mm and its magazine.
+  id: 6491
+  time: '2026-10-02T22:27:37.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1997
+- author: ZABLIK51
+  changes:
+    - type: Add
+      message: Optio drip
+  id: 6492
+  time: '2026-10-02T22:54:22.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2030
+- author: Bradysgaming
+  changes:
+    - type: Add
+      message: 'Added Patreon set '
+  id: 6493
+  time: '2026-10-02T22:54:37.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2033
+- author: Vixting
+  changes:
+    - type: Add
+      message: combined explosions have diminishing returns now
+  id: 6494
+  time: '2026-10-03T13:25:53.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2016
+- author: JohnKieser
+  changes:
+    - type: Fix
+      message: >-
+        brahdos should listen most of the time now during rides. They should
+        also listen to follow commands normally.
+    - type: Fix
+      message: brahmin can be ridden and recruited normally again.
+  id: 6495
+  time: '2026-10-03T13:26:24.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2036
+- author: cythisiax
+  changes:
+    - type: Tweak
+      message: Staff Audit Functionality. Everything is now logged and ckey by ckey.
+  id: 6496
+  time: '2026-10-03T22:35:49.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2037
+- author: cythisiax
+  changes:
+    - type: Fix
+      message: NCR Venndnor & Medical Officer + Combat armor addition
+    - type: Fix
+      message: Admin things
+  id: 6497
+  time: '2026-10-04T11:53:06.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2039
+- author: aftermath434
+  changes:
+    - type: Add
+      message: 'Off duty, director of science, and ESI agent to enclave   '
+  id: 6498
+  time: '2026-10-04T12:08:16.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2026
+- author: cythisiax
+  changes:
+    - type: Add
+      message: Updates to extractor waves, increased spawn pool choices.
+    - type: Add
+      message: Radio Tower, must be activated during round to enable :w/Wasteland
+    - type: Add
+      message: N14JunkAbraxoCleaner combination to create it
+    - type: Fix
+      message: Issues with NCR Vendor
+  id: 6499
+  time: '2026-10-04T23:55:03.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2042
+- author: cythisiax
+  changes:
+    - type: Fix
+      message: >-
+        I accidentally attached a tag to ALL N14RadioTower and spammed map. It
+        is now on a specific N14RadioTower now.
+  id: 6500
+  time: '2026-10-05T02:16:39.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2043
+- author: consumption45
+  changes:
+    - type: Add
+      message: another houndmaster slot
+  id: 6501
+  time: '2026-10-05T02:23:32.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/1962
+- author: riptidetheshark87-tech
+  changes:
+    - type: Fix
+      message: tribal helmet costing 500 steel
+  id: 6502
+  time: '2026-10-05T18:21:57.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2045
+- author: ToasterEnjoyer
+  changes: []
+  id: 6503
+  time: '2026-10-05T23:08:29.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2000
+- author: JohnKieser
+  changes:
+    - type: Add
+      message: A lot of new microwavable recipes and other food related stuff.
+  id: 6504
+  time: '2026-10-06T16:15:38.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2051
+- author: JohnKieser
+  changes:
+    - type: Fix
+      message: >-
+        fixed recipes for new food items. Adjusted storage and size of food box.
+        Food category now shows up for caravan trader.
+    - type: Fix
+      message: >-
+        Fixed brahdos being limited trader stock. I misinterpreted the prototype
+        and thought it meant they were sold in pairs. Prices also adjusted
+        because of this.  
+  id: 6505
+  time: '2026-10-07T21:39:05.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2059
+- author: cythisiax
+  changes:
+    - type: Add
+      message: 'AutoWarpers between map grids. A FTB screen and lower right welcome. '
+    - type: Add
+      message: >-
+        Pinmap command to allow admins to make global map pins for
+        WendoverMap/Tacmaps
+    - type: Remove
+      message: >-
+        Gauss Rifle has been commented out codewise, but remains admin
+        spawnable.
+    - type: Tweak
+      message: Adjustment to MechPA
+  id: 6506
+  time: '2026-10-07T21:39:39.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2054
+- author: Bradysgaming
+  changes:
+    - type: Fix
+      message: Fixed Enclave commander timelock (120 -> 40 hours)
+  id: 6507
+  time: '2026-10-08T19:56:03.0000000+00:00'
+  url: https://github.com/Misfit-Sanctuary/nuclear-14/pull/2063
