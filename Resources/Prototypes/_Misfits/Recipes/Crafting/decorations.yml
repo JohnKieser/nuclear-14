@@ -426,8 +426,8 @@
   description: A navy blue flag with a White Ring, Stars and the Angel. It is the flag of the people of New Canaan.
   hide: false
   icon:
-    sprite: _Misfits/Objects/Decoration/Flags/newcanaanflag.rsi
-    state: icon
+    sprite: _Misfits/Structures/Decoration/newcanaanflag.rsi
+    state: newcanaanflag
   objectType: Structure
   placementMode: SnapgridCenter
 

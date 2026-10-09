@@ -1,8 +1,8 @@
-ent-MisfitsFoodSushiMeatRaw = Simple Sushi
+ent-MisfitsFoodSushiRaw = Simple Sushi
     .desc = A simple slice of a fine fish cut on some rice. Refreshing and tasty!
 food-desc-sushi-eat= Tastes fishy, refreshing and like rice
 
-ent-MisfitsFoodSushiMeatCooked = Simple Fried Sushi
+ent-MisfitsFoodSushiCooked = Simple Fried Sushi
     .desc =  A simple slice of mildly fried sushi on some rice, for the ones who want to still eat sushi but without the traditional texture.
 food-desc-sushiCooked-eat= Tastes like fried fish, refreshing and like rice.
 

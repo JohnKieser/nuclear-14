@@ -3,7 +3,7 @@
 - type: microwaveMealRecipe
   id: MisfitsRecipeSushiRaw
   name: Simple Sushi
-  result: MisfitsFoodSushiMeatRaw
+  result: MisfitsFoodSushiRaw
   time: 10
   reagents:
     Rice: 10
@@ -13,7 +13,7 @@
 - type: microwaveMealRecipe
   id: MisfitsRecipeSushiCooked
   name: Fried Simple Sushi
-  result: MisfitsFoodSushiMeatCooked
+  result: MisfitsFoodSushiCooked
   time: 10
   reagents:
     Rice: 10

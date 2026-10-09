@@ -141,7 +141,7 @@
   result: MisfitsFoodKebabWrap
   time: 5
   solids:
-    N14FoodMeatBrahminCutletCooked: 3
+    MisfitsFoodKebabSlice: 3
     N14FoodCabbage: 1
     N14FloraProduceWildOnion: 1
     N14FoodDoughSlice: 1
