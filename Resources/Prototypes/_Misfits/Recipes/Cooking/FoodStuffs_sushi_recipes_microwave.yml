@@ -4,7 +4,7 @@
   id: MisfitsRecipeSushiRaw
   name: Simple Sushi
   result: MisfitsFoodSushiRaw
-  time: 10
+  time: 5
   reagents:
     Rice: 10
   solids:
