@@ -382,6 +382,10 @@
           prob: 0.75
           amount: 1
           maxAmount: 1
+        - id: GarlicSeeds
+          prob: 0.75
+          amount: 1
+          maxAmount: 1
 
 
 - type: entity
@@ -1177,6 +1181,10 @@
           prob: 0.75
           amount: 1
           maxAmount: 1
+        - id: GarlicSeeds
+          prob: 0.75
+          amount: 1
+          maxAmount: 1
 
 - type: entity
   abstract: true
@@ -1774,6 +1782,10 @@
           prob: 0.75
           amount: 1
           maxAmount: 1
+        - id: GarlicSeeds
+          prob: 0.75
+          amount: 1
+          maxAmount: 1
 
 - type: entity
   abstract: true
@@ -2197,6 +2209,10 @@
           amount: 1
           maxAmount: 1
         - id: SugarcaneSeeds
+          prob: 0.75
+          amount: 1
+          maxAmount: 1
+        - id: GarlicSeeds
           prob: 0.75
           amount: 1
           maxAmount: 1

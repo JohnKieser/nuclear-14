@@ -402,6 +402,10 @@
           prob: 0.75
           amount: 1
           maxAmount: 1
+        - id: GarlicSeeds
+          prob: 0.75
+          amount: 1
+          maxAmount: 1
 
 
 - type: entity
