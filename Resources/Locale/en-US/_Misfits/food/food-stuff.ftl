@@ -16,7 +16,7 @@ food-desc-redFishCutlet-eat= Tastes like raw fish.
 
 ent-N14RedfishCutletCooked = Red Fish Cutlet Cooked
     .desc = A slice of a fine red fish cut. Looks refreshing!
-food-desc-redFishCutletCooked-eat= Tastes like cooked raw fish.
+food-desc-redFishCutletCooked-eat= Tastes like fried fish.
 
 ent-MisfitsFoodSushiFishCarrotRaw = Carrot and Fish Sushi Roll
     .desc = A simple carrot and fish sushi roll. Where the seaweed came from is unknown.
