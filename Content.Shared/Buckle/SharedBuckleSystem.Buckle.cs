@@ -20,6 +20,8 @@ using Content.Shared.Storage.Components;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Content.Shared._Misfits.Buckle.Events;
+using Content.Shared.Mobs;
+using Content.Shared.Vehicles;
 using Content.Shared.Whitelist;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -52,6 +54,8 @@ public abstract partial class SharedBuckleSystem
         SubscribeLocalEvent<BuckleComponent, InsertIntoEntityStorageAttemptEvent>(OnBuckleInsertIntoEntityStorageAttempt);
 
         SubscribeLocalEvent<BuckleComponent, PreventCollideEvent>(OnBucklePreventCollide);
+        SubscribeLocalEvent<BuckleComponent, MobStateChangedEvent>(OnRiderMobStateChanged);
+
         SubscribeLocalEvent<BuckleComponent, DownAttemptEvent>(OnBuckleDownAttempt);
         SubscribeLocalEvent<BuckleComponent, StandAttemptEvent>(OnBuckleStandAttempt);
         SubscribeLocalEvent<BuckleComponent, ThrowPushbackAttemptEvent>(OnBuckleThrowPushbackAttempt);
@@ -65,6 +69,17 @@ public abstract partial class SharedBuckleSystem
         });
     }
 
+    // #Cythisiax Fixed - Revert PR #1103: projectiles no longer pass through a ridden vehicle's fixture,
+    // so the bike blocks shots and takes full damage again.
+    private void OnRiderMobStateChanged(Entity<BuckleComponent> ent, ref MobStateChangedEvent args)
+    {
+        if (args.NewMobState == MobState.Alive ||
+            ent.Comp.BuckledTo is not { } strap ||
+            !HasComp<VehicleComponent>(strap))
+            return;
+
+        Unbuckle((ent.Owner, ent.Comp), null);
+    }
     private void OnBuckleComponentShutdown(Entity<BuckleComponent> ent, ref ComponentShutdown args)
         => Unbuckle(ent!, null);
 
@@ -439,7 +454,7 @@ public abstract partial class SharedBuckleSystem
         Appearance.SetData(buckle, BuckleVisuals.Buckled, true);
         _rotationVisuals.SetHorizontalAngle(buckle.Owner, strap.Comp.Rotation);
     }
-    private void Buckle(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap, EntityUid? user)
+    public void Buckle(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap, EntityUid? user)
     {
         if (user == buckle.Owner)
             _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(user):player} buckled themselves to {ToPrettyString(strap)}");

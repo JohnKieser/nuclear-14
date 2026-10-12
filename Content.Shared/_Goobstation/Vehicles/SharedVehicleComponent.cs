@@ -8,17 +8,16 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using System.Numerics;
-using Robust.Shared.Audio;
-using Robust.Shared.GameStates;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 
+using Robust.Shared.Audio;
 namespace Content.Shared.Vehicles;
 
 [RegisterComponent, NetworkedComponent]
 public sealed partial class VehicleComponent : Component
 {
+    /// <summary>
+    /// current driver, null if no driver buckled currently
+    /// </summary>
     [ViewVariables]
     public EntityUid? Driver;
 
@@ -41,18 +40,27 @@ public sealed partial class VehicleComponent : Component
 
     /// <summary>
     /// Will the vehicle move when a driver buckles
+    /// Default will require key insert <see cref="SharedVehicleSystem.OnInsert"/>
+    /// <see cref="SharedVehicleSystem.TurnOnEngine"/> for another way to set this variable
     /// </summary>
     [DataField]
     public bool EngineRunning;
 
     /// <summary>
-    /// What sound to play when the driver presses the horn action (plays once)
+    /// we just turn the engine on/off on buckle/unbuckle
+    /// removing the need for a key
+    /// </summary>
+    [DataField]
+    public bool RequireKey = true;
+
+    /// <summary>
+    /// What sounds to play when the driver presses the horn action (plays once)
     /// </summary>
     [DataField]
     public SoundSpecifier? HornSound;
 
     /// <summary>
-    /// What sound to play when the driver presses the siren action (loops)
+    /// What sounds to play when the driver presses the siren action (loops)
     /// </summary>
     [DataField]
     public SoundSpecifier? SirenSound;
