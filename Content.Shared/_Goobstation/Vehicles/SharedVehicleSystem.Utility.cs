@@ -9,12 +9,36 @@ using Content.Shared.Movement.Components;
 namespace Content.Shared.Vehicles;
 public abstract partial class SharedVehicleSystem : EntitySystem
 {
+    private static EngineOffEvent EngineOff;
+    private static EngineOnEvent EngineOn;
+    private static EngineTryOffEvent EngineTryOff;
+    private static EngineTryOnEvent EngineTryOn;
+    public void TryTurnOnEngine(Entity<VehicleComponent> vehicle)
+    {
+
+        EngineTryOff = new(vehicle.Comp);
+        RaiseLocalEvent(vehicle,ref EngineTryOn);
+        if (!EngineTryOn.Cancel)
+            TurnOnEngine(vehicle);
+
+    }
+    public void TryTurnOffEngine(Entity<VehicleComponent> vehicle)
+    {
+
+        EngineTryOff = new(vehicle.Comp);
+        RaiseLocalEvent(vehicle,ref EngineTryOff);
+        if (!EngineTryOff.Cancel)
+            TurnOffEngine(vehicle);
+
+    }
     public void TurnOnEngine(Entity<VehicleComponent> vehicle)
     {
         DebugTools.Assert(!vehicle.Comp.EngineRunning);
         vehicle.Comp.EngineRunning = true;
         _appearance.SetData(vehicle.Owner, VehicleState.Animated, true);
         _ambientSound.SetAmbience(vehicle.Owner, true);
+
+        RaiseLocalEvent(vehicle,ref EngineOn);
 
         if (vehicle.Comp.Driver is not null)
             DriverStart(vehicle);
@@ -26,6 +50,9 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         vehicle.Comp.EngineRunning = false;
         _appearance.SetData(vehicle.Owner, VehicleState.Animated, false);
         _ambientSound.SetAmbience(vehicle.Owner, false);
+
+        RaiseLocalEvent(vehicle,ref EngineOff);
+
         if (vehicle.Comp.Driver is not null)
             DriverEnd(vehicle);
     }
@@ -79,6 +106,10 @@ public abstract partial class SharedVehicleSystem : EntitySystem
     {
         if (ent.Comp.OverlayPrototype == null)
             return;
+
+        // // Misfits server spawns the overlay & networks it a predicted client spawn would leave duplicate that never gets deleted (cuz its not networked)
+        // if (_net.IsClient)
+        //     return;
         var overlay = Spawn(ent.Comp.OverlayPrototype, Transform(ent).Coordinates);
         _transform.SetParent(overlay, ent);
         _transform.SetLocalPosition(overlay, Vector2.Zero);

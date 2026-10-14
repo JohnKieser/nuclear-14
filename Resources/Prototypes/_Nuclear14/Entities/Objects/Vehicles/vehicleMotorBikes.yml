@@ -14,18 +14,61 @@
       East: -0.15, -0.18
       West: 0.15, -0.18
   - type: Damageable
-    # #Cythisiax Fixed - was Inorganic, which ignored Structural/Caustic/Radiation damage and made motorbikes take zero damage from plasma (BulletPlasma deals Caustic + Radiation + Structural). StructuralInorganic matches the windows.yml fix.
-    damageContainer: StructuralInorganic
+    damageContainer: MisfitsVehicleNormal
     damageModifierSet: Motorbike
   - type: Repairable
     fuelCost: 10
     doAfterDelay: 15
     qualityNeeded: Welding
+  - type: UseDelay
+    delay: 0.5
+  - type: Reactive
+    groups:
+      Flammable: [ Touch ]
+      Extinguish: [ Touch ]
+  - type: ExtinguishOnInteract
+    stackDelta: -1.0
+    extinguishAttemptSound:
+      path: /Audio/Items/candle_blowing.ogg
+      params:
+        variation: 0.05
+        volume: 10
+  - type: Flammable
+    fireStackIncreaseMultiplier: 1.35 # until you light it up, cuz it's oily too
+    fireSpread: true
+    canResistFire: false
+    alwaysCombustible: true
+    canExtinguish: true
+    firestacksOnIgnite: 3.0
+    damage:
+      types:
+        Heat: 10
+  - type: FireVisuals
+    sprite: Effects/fire.rsi
+    normalState: fire
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: FireBomb
+    totalIntensity: 150 # a ~2 tile radius
+    intensitySlope: 5
+    maxIntensity: 10
   - type: Destructible
-    thresholds: []
-  - type: ExplosionResistance
-    worn: false
-    damageCoefficient: 1.1
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:TriggerBehavior
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageGroupTrigger
+        damageGroup: Burn
+        damage: 100
+      behaviors:
+      - !type:TriggerBehavior
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
   - type: SolutionContainerManager
     solutions:
       motorbikeFuel:
@@ -33,12 +76,10 @@
   - type: ExaminableSolution
     solution: motorbikeFuel
   - type: Strap
-    # #Misfits Change - vehicle riding requires the shared riding perk instead of any humanoid.
     whitelist:
       requireAll: true
       components:
       - HumanoidAppearance
-      - RidingPerk
     # #Misfits Fix - Super Mutants and Power Armor wearers are too heavy to ride motorbikes
     blacklist:
       tags:
@@ -62,6 +103,10 @@
         - MobMask
         layer:
         - MobLayer
+      flammable:
+        hard: false
+        shape: !type:PhysShapeCircle
+          radius: 0.76
   - type: ItemSlots
     slots:
       key_slot:
