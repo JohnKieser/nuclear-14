@@ -1,7 +1,7 @@
-namespace Content.Shared.Vehicles;
 
 
-public sealed class DisabledEntityComponent
+[RegisterComponent, NetworkedComponent]
+public sealed partial class DisabledEntityComponent : Component
 {
-    
+
 }

@@ -1,7 +1,7 @@
 
 
 [RegisterComponent, NetworkedComponent]
-public sealed partial class DisabledComponent : Component
+public sealed partial class ActiveEntityComponent : Component
 {
 
 }

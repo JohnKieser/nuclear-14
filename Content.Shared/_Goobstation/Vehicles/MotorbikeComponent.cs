@@ -3,9 +3,6 @@ using Content.Shared.Chemistry.Reagent;
 using Content.Shared.DoAfter;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Audio;
-using Robust.Shared.GameStates;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 
 namespace Content.Shared.Vehicles;
 
@@ -23,27 +20,26 @@ public sealed partial class MotorbikeComponent : Component
 
     [DataField]
     public FixedPoint2 RefillAmount = FixedPoint2.New(200f);
-
-    [DataField]
-    public FixedPoint2 MaxIntegrity = FixedPoint2.New(280f);
-
     [DataField]
     public TimeSpan RefillDelay = TimeSpan.FromSeconds(10);
 
-    [DataField]
-    public TimeSpan ExplosionDelay = TimeSpan.FromSeconds(10);
+    // [DataField]
+    // public FixedPoint2 MaxIntegrity = FixedPoint2.New(280f);
 
-    [DataField]
-    public string ExplosionType = "Default";
+    // [DataField]
+    // public TimeSpan ExplosionDelay = TimeSpan.FromSeconds(10);
+    //
+    // [DataField]
+    // public string ExplosionType = "Default";
 
-    [DataField]
-    public float ExplosionTotalIntensity = 10f;
-
-    [DataField]
-    public float ExplosionSlope = 10f;
-
-    [DataField]
-    public float ExplosionMaxTileIntensity = 5f;
+    // [DataField]
+    // public float ExplosionTotalIntensity = 10f;
+    //
+    // [DataField]
+    // public float ExplosionSlope = 10f;
+    //
+    // [DataField]
+    // public float ExplosionMaxTileIntensity = 5f;
 
     [DataField]
     public SoundSpecifier RefillSound = new SoundPathSpecifier("/Audio/Effects/refill.ogg");
@@ -60,8 +56,8 @@ public sealed partial class MotorbikeComponent : Component
     [ViewVariables, AutoNetworkedField]
     public bool Burning;
 
-    [ViewVariables, AutoNetworkedField]
-    public TimeSpan? ExplodeAt;
+    // [ViewVariables, AutoNetworkedField]
+    // public TimeSpan? ExplodeAt;
 }
 
 [Serializable, NetSerializable]

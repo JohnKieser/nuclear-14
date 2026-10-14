@@ -12,7 +12,7 @@
 using Robust.Shared.Audio;
 namespace Content.Shared.Vehicles;
 
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent,Access(typeof(SharedVehicleSystem))]
 public sealed partial class VehicleComponent : Component
 {
     /// <summary>
@@ -43,8 +43,8 @@ public sealed partial class VehicleComponent : Component
     /// Default will require key insert <see cref="SharedVehicleSystem.OnInsert"/>
     /// <see cref="SharedVehicleSystem.TurnOnEngine"/> for another way to set this variable
     /// </summary>
-    [DataField]
-    public bool EngineRunning;
+    public bool EngineRunning = false;
+
 
     /// <summary>
     /// we just turn the engine on/off on buckle/unbuckle
@@ -108,6 +108,17 @@ public sealed partial class VehicleComponent : Component
     public int? OriginalDrawDepth;
 }
 
+[ByRefEvent]
+public record struct EngineOffEvent;
+
+[ByRefEvent]
+public record struct EngineOnEvent;
+
+[ByRefEvent]
+public record struct EngineTryOffEvent(VehicleComponent Comp, bool Cancel = false, bool Handled = false);
+
+[ByRefEvent]
+public record struct EngineTryOnEvent(VehicleComponent Comp, bool Cancel = false, bool Handled = false);
 [Serializable, NetSerializable]
 public enum VehicleState : byte
 {
