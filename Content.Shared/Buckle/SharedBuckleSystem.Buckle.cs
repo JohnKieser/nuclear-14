@@ -19,6 +19,8 @@ using Content.Shared.Standing;
 using Content.Shared.Storage.Components;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
+using Content.Shared._Misfits.Buckle;
+using Content.Shared.Vehicles;
 using Content.Shared._Misfits.Buckle.Events;
 using Content.Shared.Mobs;
 using Content.Shared.Vehicles;
@@ -186,7 +188,7 @@ public abstract partial class SharedBuckleSystem
         // #Misfits Fix — skip position-drift check for mountable straps.
         // The mount system manages rider positioning with direction-dependent
         // offsets that intentionally deviate from BuckleOffset.
-        if (HasComp<MountableComponent>(strapUid))
+        if (HasComp<MountableComponent>(strapUid) || HasComp<DirectionalBuckleOffsetComponent>(strapUid))
             return;
 
         var delta = (xform.LocalPosition - strapComp.BuckleOffset).LengthSquared();
@@ -213,6 +215,11 @@ public abstract partial class SharedBuckleSystem
     private void OnBucklePreventCollide(EntityUid uid, BuckleComponent component, ref PreventCollideEvent args)
     {
         if (args.OtherEntity == component.BuckledTo && component.DontCollide)
+            args.Cancelled = true;
+
+        // Misfits Riders are pinned at an offset on mounts, so only mounts body should block, non hard contacts still hit rider.
+        if (args.OurFixture.Hard && args.OtherFixture.Hard && component.BuckledTo is { } strap
+            && (HasComp<MountableComponent>(strap) || HasComp<VehicleComponent>(strap)))
             args.Cancelled = true;
     }
 

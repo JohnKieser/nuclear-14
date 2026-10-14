@@ -140,7 +140,15 @@ public abstract partial class SharedVehicleSystem : EntitySystem
             DriverStart(vehicle);
             return;
         }
-
+        // // Misfits server spawns the overlay & networks it a predicted client spawn would leave duplicate that never gets deleted (cuz its not networked)
+        // if (_net.IsClient)
+        //     return;
+        //
+        // var overlay = EntityManager.SpawnEntity(ent.Comp.OverlayPrototype, Transform(ent).Coordinates);
+        // _transform.SetParent(overlay, ent);
+        // _transform.SetLocalPosition(overlay, Vector2.Zero);
+        // _transform.SetLocalRotation(overlay, Angle.Zero);
+        // ent.Comp.ActiveOverlay = overlay;
         if (!vehicle.Comp.RequireKey)
             TurnOnEngine(vehicle);
     }

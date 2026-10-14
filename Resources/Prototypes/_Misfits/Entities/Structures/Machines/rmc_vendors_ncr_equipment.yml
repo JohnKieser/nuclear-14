@@ -7,6 +7,7 @@
   suffix: NCR
   components:
   - type: CMAutomatedVendor
+    enabled: false
     maxAuthorityTier: 3
     # Every NCR equipment vendor instance draws from this shared faction armory pool.
     sharedPool: NCREquipment
