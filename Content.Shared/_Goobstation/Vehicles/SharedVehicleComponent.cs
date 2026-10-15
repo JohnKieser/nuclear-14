@@ -41,7 +41,7 @@ public sealed partial class VehicleComponent : Component
     /// <summary>
     /// Will the vehicle move when a driver buckles
     /// Default will require key insert <see cref="SharedVehicleSystem.OnInsert"/>
-    /// <see cref="SharedVehicleSystem.TurnOnEngine"/> for another way to set this variable
+    /// <see cref="SharedVehicleSystem.TryTurnOnEngine"/> for another way to set this variable
     /// </summary>
     public bool EngineRunning = false;
 

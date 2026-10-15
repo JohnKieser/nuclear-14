@@ -13,13 +13,10 @@ public sealed partial class MotorbikeComponent : Component
     public string FuelSolution = "motorbikeFuel";
 
     [DataField]
-    public ProtoId<ReagentPrototype> FuelReagent = "WeldingFuel";
+    public List<ProtoId<ReagentPrototype>> AllowedReagents = ["WeldingFuel",];
 
     [DataField]
     public FixedPoint2 FuelUsePerSecond = FixedPoint2.New(0.13f);
-
-    [DataField]
-    public FixedPoint2 RefillAmount = FixedPoint2.New(200f);
     [DataField]
     public TimeSpan RefillDelay = TimeSpan.FromSeconds(10);
 

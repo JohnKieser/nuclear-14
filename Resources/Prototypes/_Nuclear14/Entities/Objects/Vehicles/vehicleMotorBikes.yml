@@ -7,12 +7,12 @@
     renderOver: None
     overlayPrototype: MisfitsMountRiderOverlay
   - type: Motorbike
-  - type: DirectionalBuckleOffset
-    offsets:
-      North: 0, -0.05
-      South: 0, 0
-      East: -0.15, -0.18
-      West: 0.15, -0.18
+#  - type: DirectionalBuckleOffset
+#    offsets:
+#      North: 0, -0.05
+#      South: 0, 0
+#      East: -0.15, -0.18
+#      West: 0.15, -0.18
   - type: Damageable
     damageContainer: MisfitsVehicleNormal
     damageModifierSet: Motorbike
@@ -34,7 +34,7 @@
         variation: 0.05
         volume: 10
   - type: Flammable
-    fireStackIncreaseMultiplier: 1.35 # until you light it up, cuz it's oily too
+    fireStackIncreaseMultiplier: 1.35
     fireSpread: true
     canResistFire: false
     alwaysCombustible: true
@@ -48,8 +48,9 @@
     normalState: fire
   - type: ExplodeOnTrigger
   - type: Explosive
+    canCreateVacuum: false
     explosionType: FireBomb
-    totalIntensity: 150 # a ~2 tile radius
+    totalIntensity: 150
     intensitySlope: 5
     maxIntensity: 10
   - type: Destructible
@@ -69,6 +70,10 @@
       - !type:TriggerBehavior
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+  - type: RefillableSolution
+    solution: motorbikeFuel
+  - type: Spillable
+    spillDelay: 5.0
   - type: SolutionContainerManager
     solutions:
       motorbikeFuel:
@@ -76,6 +81,7 @@
   - type: ExaminableSolution
     solution: motorbikeFuel
   - type: Strap
+    size: 300
     whitelist:
       requireAll: true
       components:

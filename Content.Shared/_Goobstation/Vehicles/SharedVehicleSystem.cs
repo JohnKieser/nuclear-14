@@ -40,20 +40,30 @@ public abstract partial class SharedVehicleSystem : EntitySystem
     {
         base.Initialize();
         SubscribeLocalEvent<VehicleComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<VehicleComponent, ComponentRemove>(OnRemove);
-        SubscribeLocalEvent<VehicleComponent, StrapAttemptEvent>(OnStrapAttempt);
-        SubscribeLocalEvent<VehicleComponent, StrappedEvent>(OnStrapped);
-        SubscribeLocalEvent<VehicleComponent, UnstrappedEvent>(OnUnstrapped);
-        SubscribeLocalEvent<VehicleComponent, VirtualItemDeletedEvent>(OnDropped);
-        SubscribeLocalEvent<VehicleComponent, MeleeHitEvent>(OnMeleeHit);
+        // TODO: reset appearence data, rem actions, and other needed things on remove
+        // SubscribeLocalEvent<VehicleComponent, ComponentRemove>(OnRemove);
 
-        SubscribeLocalEvent<VehicleComponent, EntInsertedIntoContainerMessage>(OnInsert);
-        SubscribeLocalEvent<VehicleComponent, EntRemovedFromContainerMessage>(OnEject);
+        //SubscribeLocalEvent<VehicleComponent, StrapAttemptEvent>(OnStrapAttempt);
 
+        // OnStrap and Unstrap do visuals/actions
+        // SubscribeLocalEvent<VehicleComponent, StrappedEvent>(OnStrapped);
+        // SubscribeLocalEvent<VehicleComponent, UnstrappedEvent>(OnUnstrapped);
+
+        // TODO: hitbox system with reusable comps
+        // SubscribeLocalEvent<VehicleComponent, MeleeHitEvent>(OnMeleeHit);
+        // TODO: key unlock comp.
+        // SubscribeLocalEvent<VehicleComponent, EntInsertedIntoContainerMessage>(OnInsert);
+        // SubscribeLocalEvent<VehicleComponent, EntRemovedFromContainerMessage>(OnEject);
+        // SubscribeLocalEvent<VehicleComponent, ItemSlotEjectAttemptEvent>(OnItemSlotEject);
+        // SubscribeLocalEvent<VehicleComponent, GetAdditionalAccessEvent>(OnGetAdditionalAccess);
         SubscribeLocalEvent<VehicleComponent, HornActionEvent>(OnHorn);
         SubscribeLocalEvent<VehicleComponent, SirenActionEvent>(OnSiren);
-        SubscribeLocalEvent<VehicleComponent, ItemSlotEjectAttemptEvent>(OnItemSlotEject);
-        SubscribeLocalEvent<VehicleComponent, GetAdditionalAccessEvent>(OnGetAdditionalAccess);
+        // TODO: prolly change to some access comp?
+        // SubscribeLocalEvent<VehicleComponent, GetAdditionalAccessEvent>(OnGetAdditionalAccess);
+
+
+
+        // TODO: comp for ActiveTimerTriggerEvent with simple light, sparkle effects, and loud hisss fuse sound
     }
 
     private void OnInit(EntityUid uid, VehicleComponent component, ComponentInit args)
@@ -69,41 +79,32 @@ public abstract partial class SharedVehicleSystem : EntitySystem
             args.Handled = true;
     }
 
-    private void OnRemove(EntityUid uid, VehicleComponent component, ComponentRemove args)
-    {
-        if (component.Driver == null)
-            return;
-        //_buckle.TryUnbuckle(component.Driver.Value, component.Driver.Value);
-        Dismount(component.Driver.Value, (uid,component));
-    }
-/// <summary>
-/// key access logic done here. If given thing inserted into slot was a key then turns on engine
-/// </summary>
+
+    /// <summary>
+    /// key access logic done here. If given thing inserted into slot was a key then turns on engine
+    /// </summary>
     private void OnInsert(Entity<VehicleComponent> vehicle, ref EntInsertedIntoContainerMessage args)
     {
-        // i dunno what this is for
-        //HasComp<InstantActionComponent>(args.Entity) ||
+
         if (args.Container.ID != vehicle.Comp.KeySlot
             || vehicle.Comp.IsBroken)
             return;
-
-        TurnOnEngine(vehicle);
+        TryTurnOnEngine(vehicle);
     }
 
     private void OnEject(Entity<VehicleComponent> vehicle, ref EntRemovedFromContainerMessage args)
     {
         if (args.Container.ID != vehicle.Comp.KeySlot)
             return;
-        TurnOffEngine(vehicle);
+        TryTurnOffEngine(vehicle);
     }
 
-
+    // TODO: diff required hands for driver and passengers
     private void OnStrapAttempt(Entity<VehicleComponent> ent, ref StrapAttemptEvent args)
     {
         if (ent.Comp.Driver is not null || ent.Comp.RequiredHands == 0)
             return;
-
-
+        // TODO: ECSFY this
         for (var hands = 0; hands < ent.Comp.RequiredHands; hands++)
             if (!_virtualItem.TrySpawnVirtualItemInHand(ent.Owner, args.Buckle.Owner))
             {
@@ -113,74 +114,42 @@ public abstract partial class SharedVehicleSystem : EntitySystem
             }
     }
 
-    /// <summary>
-    /// Overwrites default buckling behavior
-    /// and does calls to handle visuals, virtual items, and adding inputmover
-    /// Driver assigned here. If allows for more than one, driver is first to buckle
-    /// </summary>
-    /// <remarks>
-    /// Might alter in the future so buckling behavior from buckle/strap comp
-    /// is modifiable enough to not need this
-    /// </remarks>
-    private void OnStrapped(Entity<VehicleComponent> vehicle, ref StrappedEvent args)
-    {
-        if (!HasComp<MobMoverComponent>(args.Buckle))
-            return;
 
-        args.Moved = true;
-        vehicle.Comp.Driver ??= args.Buckle;
+    // private void OnStrapped(Entity<VehicleComponent> vehicle, ref StrappedEvent args)
+    // {
+    //     args.Moved = true;
+    //     vehicle.Comp.Driver ??= args.Buckle;
+    //
+    //     _appearance.SetData(vehicle, VehicleState.DrawOver, true);
+    //     var curSlot = args.Strap.Comp.BuckledEntities.Count;
+    //     _buckle.BuckleToCoord(args.Buckle, args.Strap, args.Strap.Comp.BuckleOffset * curSlot );
+    //
+    //     if (vehicle.Comp.Driver != args.Buckle)
+    //         return;
+    //
+    //     TryEnableDriving(vehicle);
+    //
+    //     // if (!vehicle.Comp.RequireKey)
+    //     //     TryTurnOnEngine(vehicle);
+    // }
 
-        _appearance.SetData(vehicle, VehicleState.DrawOver, true);
-        var curSlot = args.Strap.Comp.BuckledEntities.Count;
-        _buckle.BuckleToCoord(args.Buckle, args.Strap, args.Strap.Comp.BuckleOffset * curSlot );
+    // private void OnUnstrapped(Entity<VehicleComponent> vehicle, ref UnstrappedEvent args)
+    // {
+    //     args.Moved = true;
+    //     _appearance.SetData(vehicle, VehicleState.DrawOver, false);
+    //     _virtualItem.DeleteInHandsMatching(args.Buckle, vehicle);
+    //     _buckle.UnbuckleToPos(args.Buckle,args.Strap, Vector2.Zero);
+    //
+    //     if (vehicle.Comp.Driver != args.Buckle)
+    //         return;
+    //
+    //
+    //     vehicle.Comp.Driver = null;
+    //     // if (!vehicle.Comp.RequireKey)
+    //     //     TryTurnOffEngine(vehicle);
+    // }
 
-        if (vehicle.Comp.Driver != args.Buckle)
-            return;
-        if (vehicle.Comp.EngineRunning)
-        {
-            DriverStart(vehicle);
-            return;
-        }
 
-
-        if (!vehicle.Comp.RequireKey)
-            TurnOnEngine(vehicle);
-    }
-
-    /// <summary>
-    /// Overwrites default unbuckling behavior
-    /// and does calls to handle visuals, virtual items, and removing inputmover
-    /// </summary>
-    /// <remarks>
-    /// Might alter in the future so buckling behavior from buckle/strap comp
-    /// is modifiable enough to not need this
-    /// </remarks>
-    private void OnUnstrapped(Entity<VehicleComponent> vehicle, ref UnstrappedEvent args)
-    {
-        args.Moved = true;
-        _appearance.SetData(vehicle, VehicleState.DrawOver, false);
-        _virtualItem.DeleteInHandsMatching(args.Buckle, vehicle);
-        _buckle.UnbuckleToPos(args.Buckle,args.Strap, Vector2.Zero);
-
-        if (vehicle.Comp.Driver != args.Buckle)
-            return;
-
-        DriverEnd(vehicle);
-        vehicle.Comp.Driver = null;
-
-        if (!vehicle.Comp.RequireKey)
-            TurnOffEngine(vehicle);
-    }
-
-    private void OnDropped(EntityUid uid, VehicleComponent comp, VirtualItemDeletedEvent args)
-    {
-        //misfits: edge case discovered during server shutdown that virtual item deletion(_virtualItem.DeleteInHandsMatching()) causes event chain where TryDrop is still called
-        //          this results in an infinite throwing event loop maybe because of vehicle entity being raised on is in the middle of deletion
-         if (TerminatingOrDeleted(uid))
-            return;
-
-         Dismount(args.User, (uid,comp), args.User);
-    }
 
     /// default behavior is to only let the driver eject the key
     private static void OnItemSlotEject(EntityUid vehicle, VehicleComponent comp, ref ItemSlotEjectAttemptEvent args)

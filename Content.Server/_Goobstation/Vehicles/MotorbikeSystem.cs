@@ -1,5 +1,7 @@
 using Content.Server.Administration;
+using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Database;
@@ -16,7 +18,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Vehicles;
 
-public partial class MotorbikeSystem : EntitySystem
+public sealed partial class MotorbikeSystem : EntitySystem
 {
 
     [Dependency] private MetaDataSystem _metaSystem = default!;
@@ -31,19 +33,21 @@ public partial class MotorbikeSystem : EntitySystem
     [Dependency] private DamageableSystem _dmg = default!;
     [Dependency] private IPrototypeManager _protoMan = default!;
 
-    private static readonly ProtoId<DamageTypePrototype> DmgType = "EngineDamage";
-    private static DamageTypePrototype _engineDmg = default!;
-    private static readonly ProtoId<DamageGroupPrototype> DmgGroup = "InternalMechanical";
-    private static DamageGroupPrototype _engineGroupDmg = default!;
+    // private static readonly ProtoId<DamageTypePrototype> DmgType = "EngineDamage";
+    // private static DamageTypePrototype _engineDmg = default!;
+    // private static readonly ProtoId<DamageGroupPrototype> DmgGroup = "InternalMechanical";
+    // private static DamageGroupPrototype _engineGroupDmg = default!;
 
-    private EntityQueryEnumerator<MotorbikeComponent, ActiveEntityComponent> _runningBikesQuery;
+
+//TODO: finish and make into general fuel consumer system/comp
+
+    private EntityQueryEnumerator<ActiveEntityComponent,MotorbikeComponent,SolutionComponent> _runningBikesQuery;
     public override void Initialize()
     {
         base.Initialize();
-
-        _runningBikesQuery = EntityQueryEnumerator<MotorbikeComponent, ActiveEntityComponent>();
-        _engineDmg = _protoMan.Index(DmgType);
-        _engineGroupDmg = _protoMan.Index(DmgGroup);
+        _solutionTickEv = new();
+        // _engineDmg = _protoMan.Index(DmgType);
+        // _engineGroupDmg = _protoMan.Index(DmgGroup);
 
         SubscribeLocalEvent<MotorbikeComponent, ComponentInit>(OnInit);
         // SubscribeLocalEvent<MotorbikeComponent, EntInsertedIntoContainerMessage>(OnKeyInserted, after: [typeof(VehicleSystem)]);
@@ -51,20 +55,66 @@ public partial class MotorbikeSystem : EntitySystem
 
         SubscribeLocalEvent<MotorbikeComponent, SolutionTransferAttemptEvent>(OnSolutionTransferAttempt);
 
-        SubscribeLocalEvent<MotorbikeComponent, DamageChangedEvent>(OnDamageChanged);
-        SubscribeLocalEvent<MotorbikeComponent, ExaminedEvent>(OnExamined);
+        //SubscribeLocalEvent<MotorbikeComponent, DamageChangedEvent>(OnDamageChanged);
+        //SubscribeLocalEvent<MotorbikeComponent, ExaminedEvent>(OnExamined);
 
         SubscribeLocalEvent<MotorbikeComponent, GetVerbsEvent<Verb>>(OnGetVerbs);
 
         SubscribeLocalEvent<MotorbikeComponent, EngineOffEvent>(OnEngineOff);
         SubscribeLocalEvent<MotorbikeComponent, EngineOnEvent>(OnEngineOn);
 
-        //SubscribeLocalEvent<MotorbikeComponent, EngineTryOffEvent>(OnTryEngineOff);
         SubscribeLocalEvent<MotorbikeComponent, EngineTryOnEvent>(OnTryEngineOn);
 
         SubscribeLocalEvent<DisabledEntityComponent, EngineTryOnEvent>(OnTryDisabledEngineOn);
 
+        SubscribeLocalEvent<SolutionTickEv>(ProcessSolutionConsumption);
+        SubscribeLocalEvent<EngineFuelComponent,SolutionConsumedEv>(OnEngineFuelTick);
+
     }
+
+    private void OnEngineFuelTick(Entity<EngineFuelComponent> ent, ref SolutionConsumedEv ev)
+    {
+        var badQuant = ev.SolutionSource.Volume.Value;
+
+        foreach (var sol in ev.AllowedReagents)
+        {
+            ReagentId id = new(sol, null);
+            badQuant -= ev.SolutionSource.GetReagent(id).Quantity.Value;
+        }
+
+        badQuant = ent.Comp.DmgPerInvalidReagent*ev.AmountToConsume.Value*(badQuant / ev.SolutionSource.Volume.Value);
+        var dmg = FixedPoint2.FromCents(badQuant);
+        var dmgType = _protoMan.Index(ent.Comp.DmgType);
+        _dmg.TryChangeDamage(ent,new(dmgType, dmg), true);
+    }
+
+    public sealed class SolutionTickEv : EntityEventArgs;
+    private static SolutionTickEv _solutionTickEv = default!;
+    [ByRefEvent]
+    public record struct SolutionConsumedEv(Solution SolutionSource, FixedPoint2 AmountToConsume,
+                        List<ProtoId<ReagentPrototype>>  AllowedReagents, bool Handled = false);
+
+    private static SolutionConsumedEv _solutionConsumedEv = default!;
+    private void ProcessSolutionConsumption(SolutionTickEv ev)
+    {
+        _runningBikesQuery = EntityQueryEnumerator<ActiveEntityComponent,MotorbikeComponent,SolutionComponent>();
+        while (_runningBikesQuery.MoveNext(out var uid, out _, out var motorbike, out var sol))
+        {
+            var fuelSolution = sol.Solution;
+            var roundedNum = motorbike.FuelUsePerSecond.Float();
+            var solutionToConsume = FixedPoint2.Min(FixedPoint2.New(roundedNum),fuelSolution.Volume);
+            _solutionConsumedEv = new(fuelSolution, solutionToConsume, motorbike.AllowedReagents);
+            RaiseLocalEvent(uid, ref _solutionConsumedEv);
+
+            if (_solutionConsumedEv.Handled)
+                continue;
+            var fuelSolEnt = (uid, sol);
+            _solution.SplitSolution(fuelSolEnt, solutionToConsume);
+        }
+
+    }
+
+
     // private void OnTryEngineOff(Entity<MotorbikeComponent> ent, ref EngineTryOffEvent args)
     // {
     //
@@ -80,9 +130,9 @@ public partial class MotorbikeSystem : EntitySystem
     {
         if (args.Handled)
             return;
-        args.Cancel =
-            !(_solution.TryGetSolution(ent.Owner, ent.Comp.FuelSolution, out _, out var fuelSolution) &&
-                                        fuelSolution.Volume > FixedPoint2.Zero);
+
+        args.Cancel = !_solution.TryGetSolution(ent.Owner, ent.Comp.FuelSolution, out _, out var fuelSolution) ||
+                        !(fuelSolution.Volume > FixedPoint2.Zero);
 
     }
     private void OnEngineOff(Entity<MotorbikeComponent> ent, ref EngineOffEvent args)
@@ -127,13 +177,8 @@ public partial class MotorbikeSystem : EntitySystem
         var tickToRun = _time.CurTick.Value % MathF.Round(_time.TickRate);
         if (tickToRun != 0)
             return;
+        QueueLocalEvent(_solutionTickEv);
 
-
-        while (_runningBikesQuery.MoveNext(out var uid, out var motorbike, out _))
-        {
-            if (!TryConsumeFuel(uid, motorbike))
-                FuelTryStopEngine(uid);
-        }
     }
 
     private void OnInit(Entity<MotorbikeComponent> ent, ref ComponentInit args)
@@ -160,74 +205,48 @@ public partial class MotorbikeSystem : EntitySystem
             args.Cancel("The driver is in the way of the fuel port!!");
     }
 
-    private void OnDamageChanged(Entity<MotorbikeComponent> ent, ref DamageChangedEvent args)
-    {
-
-        if (args.Damageable.Damage.TryGetDamageInGroup(_engineGroupDmg, out var dmg) && dmg > 50.0)
-            DestroyEngine(ent);
-
-    }
-
-    private void OnExamined(Entity<MotorbikeComponent> ent, ref ExaminedEvent args)
-    {
-        if (!args.IsInDetailsRange ||
-            !_solution.TryGetSolution(ent.Owner, ent.Comp.FuelSolution, out _, out var fuelSolution))
-        {
-            return;
-        }
-
-        var current = fuelSolution.GetTotalPrototypeQuantity(ent.Comp.FuelReagent);
-        args.PushMarkup(Loc.GetString("motorbike-examine-fuel", ("current", current), ("max", fuelSolution.MaxVolume)));
-    }
-
-
-
-    private bool TryConsumeFuel(EntityUid uid, MotorbikeComponent motorbike)
-    {
-
-        if (!_solution.TryGetSolution(uid, motorbike.FuelSolution, out var fuelSoln, out var fuelSolution))
-        {
-            // debug here
-            return false;
-        }
-
-        var roundedNum = motorbike.FuelUsePerSecond.Float();
-        var fuelToUse = FixedPoint2.Min(FixedPoint2.New(roundedNum),fuelSolution.Volume);
-        var consumed = _solution.SplitSolution(fuelSoln.Value, fuelToUse);
-
-        var validFuelUsed = consumed.GetTotalPrototypeQuantity(motorbike.FuelReagent);
-
-        var shouldRun = validFuelUsed / fuelToUse > .5f &&
-                        fuelSolution.GetTotalPrototypeQuantity(motorbike.FuelReagent) > 0;
-
-        consumed.RemoveReagent(motorbike.FuelReagent, validFuelUsed);
-        var damage = consumed.Volume * 10;
-
-        if (damage >= 1)
-            _dmg.TryChangeDamage(uid,new(_engineDmg, damage), true);
-        return shouldRun;
-
-    }
+    // private void OnDamageChanged(Entity<MotorbikeComponent> ent, ref DamageChangedEvent args)
+    // {
+    //
+    //     if (args.Damageable.Damage.TryGetDamageInGroup(_engineGroupDmg, out var dmg) && dmg > 50.0)
+    //         DestroyEngine(ent);
+    //
+    // }
+    // private void DestroyEngine(EntityUid uid)
+    // {
+    //
+    //     var bike = (uid,Comp<VehicleComponent>(uid));
+    //     _vehicle.TryTurnOffEngine(bike);
+    //     EnsureComp<DisabledEntityComponent>(uid);
+    //
+    //     //_popup.PopupEntity(Loc.GetString(locMsg), uid);
+    // }
+    // private void OnExamined(Entity<MotorbikeComponent> ent, ref ExaminedEvent args)
+    // {
+    //     if (!args.IsInDetailsRange ||
+    //         !_solution.TryGetSolution(ent.Owner, ent.Comp.FuelSolution, out _, out var fuelSolution))
+    //     {
+    //         return;
+    //     }
+    //
+    //     var current = fuelSolution.GetTotalPrototypeQuantity(ent.Comp.FuelReagent);
+    //     args.PushMarkup(Loc.GetString("motorbike-examine-fuel", ("current", current), ("max", fuelSolution.MaxVolume)));
+    // }
 
     private void FuelTryStopEngine(EntityUid uid)
     {
         Entity<VehicleComponent> bike = (uid,Comp<VehicleComponent>(uid));
         if (bike.Comp.EngineRunning)
-            _vehicle.TurnOffEngine(bike);
+            _vehicle.TryTurnOffEngine(bike);
 
     }
     private void FuelStartEngine(EntityUid uid)
     {
         var bike = (uid,Comp<VehicleComponent>(uid));
-        _vehicle.TurnOnEngine(bike);
+        _vehicle.TryTurnOnEngine(bike);
     }
-    private void DestroyEngine(EntityUid uid)
-    {
 
-        var bike = (uid,Comp<VehicleComponent>(uid));
-        _vehicle.TurnOffEngine(bike);
-        EnsureComp<DisabledEntityComponent>(uid);
 
-        //_popup.PopupEntity(Loc.GetString(locMsg), uid);
-    }
+
+
 }
