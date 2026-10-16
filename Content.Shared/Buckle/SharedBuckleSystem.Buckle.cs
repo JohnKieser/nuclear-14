@@ -499,7 +499,7 @@ public abstract partial class SharedBuckleSystem
     ///     was previously already unbuckled.
     /// </returns>
     public bool TryUnbuckle(EntityUid buckleUid,
-        EntityUid? user,
+        EntityUid? user = null,
         BuckleComponent? buckleComp = null,
         bool popup = true)
     {

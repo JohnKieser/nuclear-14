@@ -8,12 +8,14 @@ using Content.Shared.Movement.Systems;
 
 namespace Content.Shared.Vehicles;
 
-
+/// <summary>
+/// requires strap/buckle
+/// </summary>
 public sealed partial class InputRelayControllerSystem : EntitySystem
 {
 
-    [Robust.Shared.IoC.Dependency] private SharedBuckleSystem _buckle = default!;
-    [Robust.Shared.IoC.Dependency] private SharedMoverController _mover = default!;
+    [Dependency] private SharedBuckleSystem _buckle = default!;
+    [Dependency] private SharedMoverController _mover = default!;
     private static InputRelayTrySetEv _trySetEv;
     private static InputRelaySetEv _setEv;
     private static InputRelayRemovedEv _removedEv;
@@ -26,6 +28,9 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
         SubscribeLocalEvent<DriveOnBuckleComponent, UnstrappedEvent>(OnUnstrapped);
         SubscribeLocalEvent<DriveOnBuckleComponent, VirtualItemDeletedEvent>(OnDropped);
 
+        CompListeners();
+
+
     }
 
     private static void OnRemove(EntityUid uid, DriveOnBuckleComponent component, ComponentRemove args)
@@ -37,28 +42,37 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
 
     private void OnStrapped(Entity<DriveOnBuckleComponent> car, ref StrappedEvent args)
     {
+        if (car.Comp.Pilots.Count >= car.Comp.MaxPilots)
+            return;
         TrySetRelay(car,args.Buckle);
     }
 
 
     private void OnUnstrapped(Entity<DriveOnBuckleComponent> car, ref UnstrappedEvent args)
     {
+        if (!car.Comp.Pilots.Contains(args.Buckle.Owner))
+            return;
         RemoveRelay(car,args.Buckle);
     }
 
 
     private void TrySetRelay(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
     {
+        if (car.Comp.Pilots.Count >= car.Comp.MaxPilots)
+            return;
+
         _trySetEv = new(pilot);
+
         RaiseLocalEvent(car ,ref _trySetEv);
         if (_trySetEv.Cancel)
             return;
         RaiseLocalEvent(pilot ,ref _trySetEv);
         if (_trySetEv.Cancel)
             return;
+
         _mover.SetRelay(pilot, car);
         car.Comp.Pilots.Add(pilot);
-        _setEv = new(pilot);
+        _setEv = new(pilot, car);
         RaiseLocalEvent(car ,ref _setEv);
         RaiseLocalEvent(pilot ,ref _setEv);
     }
@@ -67,7 +81,7 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
     {
         RemComp<RelayInputMoverComponent>(pilot);
         car.Comp.Pilots.Remove(pilot);
-        _removedEv = new(pilot);
+        _removedEv = new(pilot, car);
         RaiseLocalEvent(car ,ref _removedEv);
         RaiseLocalEvent(pilot ,ref _removedEv);
     }
@@ -86,21 +100,13 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
 
 
     [ByRefEvent]
-    public record struct InputRelaySetEv(EntityUid Driver);
+    public record struct InputRelaySetEv(EntityUid Driver, EntityUid Vehicle);
 
     [ByRefEvent]
-    public record struct InputRelayRemovedEv(EntityUid Driver);
+    public record struct InputRelayRemovedEv(EntityUid Driver, EntityUid Vehicle);
 
     [ByRefEvent]
     public record struct InputRelayTrySetEv(EntityUid Driver, bool  Cancel = false);
-
-    [ByRefEvent]
-    public record struct EngineTryOffEvent(VehicleComponent Comp, bool Cancel = false, bool Handled = false);
-
-    [ByRefEvent]
-    public record struct EngineTryOnEvent(VehicleComponent Comp, bool Cancel = false, bool Handled = false);
-
-
 }
 
 

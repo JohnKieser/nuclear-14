@@ -15,11 +15,6 @@ namespace Content.Shared.Vehicles;
 [RegisterComponent, NetworkedComponent,Access(typeof(SharedVehicleSystem))]
 public sealed partial class VehicleComponent : Component
 {
-    /// <summary>
-    /// current driver, null if no driver buckled currently
-    /// </summary>
-    [ViewVariables]
-    public EntityUid? Driver;
 
     [ViewVariables]
     public EntityUid? HornAction;
@@ -37,14 +32,6 @@ public sealed partial class VehicleComponent : Component
     /// </summary>
     [DataField]
     public int RequiredHands = 1;
-
-    /// <summary>
-    /// Will the vehicle move when a driver buckles
-    /// Default will require key insert <see cref="SharedVehicleSystem.OnInsert"/>
-    /// <see cref="SharedVehicleSystem.TryTurnOnEngine"/> for another way to set this variable
-    /// </summary>
-    public bool EngineRunning = false;
-
 
     /// <summary>
     /// we just turn the engine on/off on buckle/unbuckle
@@ -108,17 +95,7 @@ public sealed partial class VehicleComponent : Component
     public int? OriginalDrawDepth;
 }
 
-[ByRefEvent]
-public record struct EngineOffEvent;
 
-[ByRefEvent]
-public record struct EngineOnEvent;
-
-[ByRefEvent]
-public record struct EngineTryOffEvent(VehicleComponent Comp, bool Cancel = false, bool Handled = false);
-
-[ByRefEvent]
-public record struct EngineTryOnEvent(VehicleComponent Comp, bool Cancel = false, bool Handled = false);
 [Serializable, NetSerializable]
 public enum VehicleState : byte
 {

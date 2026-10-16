@@ -1,11 +1,9 @@
 using Content.Shared.Damage.Prototypes;
-using Robust.Shared.GameStates;
-
 
 namespace Content.Server.Vehicles;
 
 [RegisterComponent, NetworkedComponent]
-public sealed partial class EngineFuelComponent : Component
+public sealed partial class DamageOnConsumeReagentComponent : Component
 {
     [DataField]
     public int DmgPerInvalidReagent = 10;

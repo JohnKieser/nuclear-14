@@ -6,7 +6,9 @@
   - type: Vehicle
     renderOver: None
     overlayPrototype: MisfitsMountRiderOverlay
-  - type: Motorbike
+  - type: VehicleEngine
+  - type: DriveOnBuckle
+  - type: SolutionConsumerComponent
 #  - type: DirectionalBuckleOffset
 #    offsets:
 #      North: 0, -0.05
