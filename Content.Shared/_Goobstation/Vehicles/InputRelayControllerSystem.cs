@@ -8,15 +8,17 @@ using Content.Shared.Movement.Systems;
 
 namespace Content.Shared.Vehicles;
 [ByRefEvent]
-public record struct InputRelaySetEv(EntityUid Driver, EntityUid Vehicle);
+public record struct InputRelaySetEv(EntityUid Driver, EntityUid Vehicle, bool Handled = false);
 
 [ByRefEvent]
-public record struct InputRelayRemovedEv(EntityUid Driver, EntityUid Vehicle);
+public record struct InputRelayRemovedEv(EntityUid Driver, EntityUid Vehicle, bool Handled = false);
 
 [ByRefEvent]
 public record struct InputRelayTrySetEv(EntityUid Driver, bool  Cancel = false);
+[ByRefEvent]
+public record struct InputRelayTrySetOffEv(EntityUid Driver, bool  Cancel = false);
 /// <summary>
-/// requires strap/buckle
+/// requires strap/buckle components
 /// </summary>
 public partial class InputRelayControllerSystem : EntitySystem
 {
@@ -26,42 +28,94 @@ public partial class InputRelayControllerSystem : EntitySystem
     private static InputRelayTrySetEv _trySetEv;
     private static InputRelaySetEv _setEv;
     private static InputRelayRemovedEv _removedEv;
+    private static InputRelayTrySetOffEv _trySetOffEv;
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<DriveOnBuckleComponent, ComponentRemove>(OnRemove);
-        SubscribeLocalEvent<DriveOnBuckleComponent, StrappedEvent>(OnStrapped);
-        SubscribeLocalEvent<DriveOnBuckleComponent, UnstrappedEvent>(OnUnstrapped);
-        SubscribeLocalEvent<DriveOnBuckleComponent, VirtualItemDeletedEvent>(OnDropped);
 
         CompListeners();
+        EventCallBacks();
 
 
     }
 
-    private static void OnRemove(EntityUid uid, DriveOnBuckleComponent component, ComponentRemove args)
+    private void OnRemove(EntityUid uid, DriveOnBuckleComponent component, ComponentRemove args)
     {
         if (component.Pilots.Count == 0)
             return;
-        component.Pilots.Clear();
+        RemoveAllPilots((uid, component));
     }
 
-    private void OnStrapped(Entity<DriveOnBuckleComponent> car, ref StrappedEvent args)
+
+
+    private bool TryPilot(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
+    {
+        if (!ShouldPilot(car, pilot))
+            return false;
+
+        SetPilot(car, pilot);
+        return true;
+    }
+
+    private void TryPilotAllStrapped(Entity<DriveOnBuckleComponent> car)
+    {
+        var buckled = Comp<StrapComponent>(car).BuckledEntities.ToList();
+        var num = Math.Min(buckled.Count,car.Comp.MaxPilots);
+        for (var i = 0; i < num; i++)
+            TryPilot(car, buckled[i]);
+    }
+    private bool TryUnPilot(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
+    {
+        if (!ShouldUnpilot(car, pilot))
+            return false;
+
+        StopPiloting(car, pilot);
+        return true;
+    }
+
+    private bool ShouldUnpilot(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
+    {
+        _trySetOffEv = new(pilot);
+
+        RaiseLocalEvent(car ,ref _trySetOffEv);
+        if (_trySetOffEv.Cancel)
+            return false;
+
+        RaiseLocalEvent(pilot ,ref _trySetOffEv);
+        if (_trySetOffEv.Cancel)
+            return false;
+
+        return true;
+    }
+    private bool ShouldPilot(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
     {
         if (car.Comp.Pilots.Count >= car.Comp.MaxPilots)
-            return;
-        var pilot = args.Buckle;
+            return false;
 
         _trySetEv = new(pilot);
 
         RaiseLocalEvent(car ,ref _trySetEv);
         if (_trySetEv.Cancel)
-            return;
+            return false;
+
         RaiseLocalEvent(pilot ,ref _trySetEv);
         if (_trySetEv.Cancel)
-            return;
+            return false;
 
+        return true;
+    }
+    private void StopPiloting(Entity<DriveOnBuckleComponent> car,EntityUid pilot)
+    {
+        RemComp<RelayInputMoverComponent>(pilot);
+        car.Comp.Pilots.Remove(pilot);
+        _removedEv = new(pilot, car);
+        RaiseLocalEvent(car ,ref _removedEv);
+        RaiseLocalEvent(pilot ,ref _removedEv);
+    }
+    private void SetPilot(Entity<DriveOnBuckleComponent> car,EntityUid pilot)
+    {
         _mover.SetRelay(pilot, car);
         car.Comp.Pilots.Add(pilot);
         _setEv = new(pilot, car);
@@ -69,33 +123,24 @@ public partial class InputRelayControllerSystem : EntitySystem
         RaiseLocalEvent(pilot ,ref _setEv);
     }
 
-
-    private void OnUnstrapped(Entity<DriveOnBuckleComponent> car, ref UnstrappedEvent args)
+    private void RemoveAllPilots(Entity<DriveOnBuckleComponent> car)
     {
-        if (!car.Comp.Pilots.Contains(args.Buckle.Owner))
-            return;
-
-        var pilot = args.Buckle;
-        RemComp<RelayInputMoverComponent>(pilot);
-        car.Comp.Pilots.Remove(pilot);
-        _removedEv = new(pilot, car);
-        RaiseLocalEvent(car ,ref _removedEv);
-        RaiseLocalEvent(pilot ,ref _removedEv);
+        var max = car.Comp.Pilots.Count;
+        for (var i = max - 1; i >= 0; i--)
+        {
+            var pilot = car.Comp.Pilots[i];
+            StopPiloting(car, pilot);
+        }
     }
-
-    private void OnDropped(EntityUid car, DriveOnBuckleComponent comp, VirtualItemDeletedEvent args)
+    private void TryRemoveAllPilots(Entity<DriveOnBuckleComponent> car)
     {
-        //misfits: edge case discovered during server shutdown that virtual item deletion(_virtualItem.DeleteInHandsMatching()) causes event chain where TryDrop is still called
-        //          this results in an infinite throwing event loop maybe because of vehicle entity being raised on is in the middle of deletion
-         if (TerminatingOrDeleted(car))
-            return;
-         var dismounter = args.User;
-         var buckle = (dismounter, Comp<BuckleComponent>(dismounter));
-         var strap = (uid: car,Comp<StrapComponent>(car));
-
-         _buckle.Unbuckle(buckle, strap, dismounter);
+        var max = car.Comp.Pilots.Count;
+        for (var i = max - 1; i >= 0; i--)
+        {
+            var pilot = car.Comp.Pilots[i];
+            TryUnPilot(car, pilot);
+        }
     }
-
 }
 
 
