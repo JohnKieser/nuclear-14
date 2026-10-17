@@ -4,5 +4,5 @@ using Content.Shared.FixedPoint;
 
 
 [ByRefEvent]
-public record struct SolutionConsumedEv(Solution SolutionSource, FixedPoint2 AmountToConsume,
+public record struct SolutionConsumedEv(Entity<SolutionComponent> SolutionSource, FixedPoint2 AmountToConsume,
     List<ProtoId<ReagentPrototype>> AllowedReagents, bool Handled = false);

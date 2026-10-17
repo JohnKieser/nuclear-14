@@ -24,7 +24,7 @@ public abstract partial class VehicleEngineSystem : EntitySystem
 
     private void OnEngineFuelTick(Entity<EngineNeedsFuelComponent> ent, ref SolutionConsumedEv ev)
     {
-        if (ev.SolutionSource.Volume > 0)
+        if (ev.SolutionSource.Comp.Solution.Volume > 0)
             return;
 
         RaiseLocalEvent(ent, ref _engineOffEvent);

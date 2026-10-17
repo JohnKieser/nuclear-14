@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using Content.Server.Administration;
 using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
@@ -9,6 +11,8 @@ using Content.Shared.Tools.Systems;
 using Content.Shared.Vehicles;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+
 
 namespace Content.Server.Vehicles;
 
@@ -35,7 +39,7 @@ public sealed partial class SolutionConsumerSystem : EntitySystem
 
 //TODO: finish and make into general fuel consumer system/comp
 
-    private EntityQueryEnumerator<ActiveSolutionConsumerComponent,SolutionConsumerComponent,SolutionComponent> _runningBikesQuery;
+    private EntityQueryEnumerator<ActiveSolutionConsumerComponent,SolutionConsumerComponent,SolutionContainerManagerComponent> _runningBikesQuery;
     public override void Initialize()
     {
         base.Initialize();
@@ -49,15 +53,15 @@ public sealed partial class SolutionConsumerSystem : EntitySystem
 
     private void OnEngineFuelTick(Entity<DamageOnConsumeReagentComponent> ent, ref SolutionConsumedEv ev)
     {
-        var badQuant = ev.SolutionSource.Volume.Value;
+        var badQuant = ev.SolutionSource.Comp.Solution.Volume.Value;
 
         foreach (var sol in ev.AllowedReagents)
         {
             ReagentId id = new(sol, null);
-            badQuant -= ev.SolutionSource.GetReagent(id).Quantity.Value;
+            badQuant -= ev.SolutionSource.Comp.Solution.GetReagent(id).Quantity.Value;
         }
 
-        badQuant = ent.Comp.DmgPerInvalidReagent*ev.AmountToConsume.Value*(badQuant / ev.SolutionSource.Volume.Value);
+        badQuant = ent.Comp.DmgPerInvalidReagent*ev.AmountToConsume.Value*(badQuant / ev.SolutionSource.Comp.Solution.Volume.Value);
         var dmg = FixedPoint2.FromCents(badQuant);
         var dmgType = _protoMan.Index(ent.Comp.DmgType);
         _dmg.TryChangeDamage(ent,new(dmgType, dmg), true);
@@ -70,19 +74,22 @@ public sealed partial class SolutionConsumerSystem : EntitySystem
     private static SolutionConsumedEv _solutionConsumedEv = default!;
     private void ProcessSolutionConsumption(SolutionTickEv ev)
     {
-        _runningBikesQuery = EntityQueryEnumerator<ActiveSolutionConsumerComponent,SolutionConsumerComponent,SolutionComponent>();
-        while (_runningBikesQuery.MoveNext(out var uid, out _, out var motorbike, out var sol))
+        _runningBikesQuery = EntityQueryEnumerator<ActiveSolutionConsumerComponent,SolutionConsumerComponent,SolutionContainerManagerComponent>();
+        while (_runningBikesQuery.MoveNext(out var uid, out _, out var consumeComp, out var sol))
         {
-            var fuelSolution = sol.Solution;
-            var roundedNum = motorbike.FuelUsePerSecond.Float();
-            var solutionToConsume = FixedPoint2.Min(FixedPoint2.New(roundedNum),fuelSolution.Volume);
-            _solutionConsumedEv = new(fuelSolution, solutionToConsume, motorbike.AllowedReagents);
+            if(!_solution.TryGetSolution((uid,sol),consumeComp.FuelSolution,out var fuelSolution))
+            {
+                DebugTools.Assert(true);
+                continue;
+            }
+            var roundedNum = consumeComp.FuelUsePerSecond.Float();
+            var solutionToConsume = FixedPoint2.Min(FixedPoint2.New(roundedNum),fuelSolution.Value.Comp.Solution.Volume);
+            _solutionConsumedEv = new(fuelSolution.Value, solutionToConsume, consumeComp.AllowedReagents);
             RaiseLocalEvent(uid, ref _solutionConsumedEv);
 
             if (_solutionConsumedEv.Handled || !(solutionToConsume > 0))
                 continue;
-            var fuelSolEnt = (uid, sol);
-            _solution.SplitSolution(fuelSolEnt, solutionToConsume);
+            fuelSolution.Value.Comp.Solution.RemoveSolution(solutionToConsume);
         }
 
     }
