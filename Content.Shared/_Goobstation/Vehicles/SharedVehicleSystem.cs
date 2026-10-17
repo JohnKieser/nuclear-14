@@ -36,9 +36,6 @@ public abstract partial class SharedVehicleSystem : EntitySystem
     [Robust.Shared.IoC.Dependency] private ActionContainerSystem _actionContainerSystem = default!;
     [Robust.Shared.IoC.Dependency] private SharedActionsSystem _sharedAct = default!;
 
-    public static readonly EntProtoId HornActionId = "ActionHorn";
-    public static readonly EntProtoId SirenActionId = "ActionSiren";
-
     public override void Initialize()
     {
         base.Initialize();
@@ -49,8 +46,8 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         SubscribeLocalEvent<VehicleComponent, HornActionEvent>(OnHorn);
         SubscribeLocalEvent<VehicleComponent, SirenActionEvent>(OnSiren);
 
-        SubscribeLocalEvent<VehicleComponent, VehicleEngineSystem.EngineOnEvent>(EngineOn);
-        SubscribeLocalEvent<VehicleComponent, VehicleEngineSystem.EngineOffEvent>(EngineOff);
+        SubscribeLocalEvent<VehicleComponent, EngineOnEvent>(EngineOn);
+        SubscribeLocalEvent<VehicleComponent, EngineOffEvent>(EngineOff);
         // TODO: prolly change to some access comp?
         // SubscribeLocalEvent<VehicleComponent, GetAdditionalAccessEvent>(OnGetAdditionalAccess);
 
@@ -65,20 +62,20 @@ public abstract partial class SharedVehicleSystem : EntitySystem
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EngineOn(Entity<VehicleComponent> vehicle, ref VehicleEngineSystem.EngineOnEvent args)
+    private void EngineOn(Entity<VehicleComponent> vehicle, ref EngineOnEvent args)
     {
         _appearance.SetData(vehicle.Owner, VehicleState.Animated, true);
         _ambientSound.SetAmbience(vehicle.Owner, true);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EngineOff(Entity<VehicleComponent> vehicle, ref VehicleEngineSystem.EngineOffEvent args)
+    private void EngineOff(Entity<VehicleComponent> vehicle, ref EngineOffEvent args)
     {
         _appearance.SetData(vehicle.Owner, VehicleState.Animated, false);
         _ambientSound.SetAmbience(vehicle.Owner, false);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DriverEnable(Entity<VehicleComponent>  vehicle, ref InputRelayControllerSystem.InputRelaySetEv ev)
+    private void DriverEnable(Entity<VehicleComponent>  vehicle, ref InputRelaySetEv ev)
     {
         _actionContainerSystem.TransferAllActions(vehicle.Owner, ev.Driver);
         SetupDriverOverlay(vehicle);
@@ -100,35 +97,13 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         ent.Comp.ActiveOverlay = overlay;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DriverDisable(Entity<VehicleComponent>  vehicle, ref InputRelayControllerSystem.InputRelayRemovedEv ev)
+    private void DriverDisable(Entity<VehicleComponent>  vehicle, ref InputRelayRemovedEv ev)
     {
         _sharedAct.RemoveProvidedActions(vehicle.Owner, ev.Driver);
         TryQueueDel(vehicle.Comp.ActiveOverlay);
         vehicle.Comp.ActiveOverlay = null;
     }
 
-    // // TODO: diff required hands for driver and passengers
-    // private void OnStrapAttempt(Entity<VehicleComponent> ent, ref StrapAttemptEvent args)
-    // {
-    //     if (ent.Comp.Driver is not null || ent.Comp.RequiredHands == 0)
-    //         return;
-    //     // TODO: ECSFY this
-    //     for (var hands = 0; hands < ent.Comp.RequiredHands; hands++)
-    //         if (!_virtualItem.TrySpawnVirtualItemInHand(ent.Owner, args.Buckle.Owner))
-    //         {
-    //             args.Cancelled = true;
-    //             _virtualItem.DeleteInHandsMatching(args.Buckle.Owner, ent.Owner);
-    //             return;
-    //         }
-    // }
-
-    //
-    // /// default behavior is to only let the driver eject the key
-    // private static void OnItemSlotEject(EntityUid vehicle, VehicleComponent comp, ref ItemSlotEjectAttemptEvent args)
-    // {
-    // if(comp.PreventEjectOfKey && args.Slot.ID == comp.KeySlot && args.User != comp.Driver)
-    //     args.Cancelled = true;
-    // }
 
     /// <summary>
     /// For vehicles that trigger doors and maybe other access tied entities on collide.

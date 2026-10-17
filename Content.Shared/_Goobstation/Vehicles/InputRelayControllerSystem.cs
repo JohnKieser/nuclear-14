@@ -7,11 +7,18 @@ using Content.Shared.Movement.Systems;
 
 
 namespace Content.Shared.Vehicles;
+[ByRefEvent]
+public record struct InputRelaySetEv(EntityUid Driver, EntityUid Vehicle);
 
+[ByRefEvent]
+public record struct InputRelayRemovedEv(EntityUid Driver, EntityUid Vehicle);
+
+[ByRefEvent]
+public record struct InputRelayTrySetEv(EntityUid Driver, bool  Cancel = false);
 /// <summary>
 /// requires strap/buckle
 /// </summary>
-public sealed partial class InputRelayControllerSystem : EntitySystem
+public partial class InputRelayControllerSystem : EntitySystem
 {
 
     [Dependency] private SharedBuckleSystem _buckle = default!;
@@ -44,22 +51,7 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
     {
         if (car.Comp.Pilots.Count >= car.Comp.MaxPilots)
             return;
-        TrySetRelay(car,args.Buckle);
-    }
-
-
-    private void OnUnstrapped(Entity<DriveOnBuckleComponent> car, ref UnstrappedEvent args)
-    {
-        if (!car.Comp.Pilots.Contains(args.Buckle.Owner))
-            return;
-        RemoveRelay(car,args.Buckle);
-    }
-
-
-    private void TrySetRelay(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
-    {
-        if (car.Comp.Pilots.Count >= car.Comp.MaxPilots)
-            return;
+        var pilot = args.Buckle;
 
         _trySetEv = new(pilot);
 
@@ -77,14 +69,20 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
         RaiseLocalEvent(pilot ,ref _setEv);
     }
 
-    private void RemoveRelay(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
+
+    private void OnUnstrapped(Entity<DriveOnBuckleComponent> car, ref UnstrappedEvent args)
     {
+        if (!car.Comp.Pilots.Contains(args.Buckle.Owner))
+            return;
+
+        var pilot = args.Buckle;
         RemComp<RelayInputMoverComponent>(pilot);
         car.Comp.Pilots.Remove(pilot);
         _removedEv = new(pilot, car);
         RaiseLocalEvent(car ,ref _removedEv);
         RaiseLocalEvent(pilot ,ref _removedEv);
     }
+
     private void OnDropped(EntityUid car, DriveOnBuckleComponent comp, VirtualItemDeletedEvent args)
     {
         //misfits: edge case discovered during server shutdown that virtual item deletion(_virtualItem.DeleteInHandsMatching()) causes event chain where TryDrop is still called
@@ -98,15 +96,6 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
          _buckle.Unbuckle(buckle, strap, dismounter);
     }
 
-
-    [ByRefEvent]
-    public record struct InputRelaySetEv(EntityUid Driver, EntityUid Vehicle);
-
-    [ByRefEvent]
-    public record struct InputRelayRemovedEv(EntityUid Driver, EntityUid Vehicle);
-
-    [ByRefEvent]
-    public record struct InputRelayTrySetEv(EntityUid Driver, bool  Cancel = false);
 }
 
 

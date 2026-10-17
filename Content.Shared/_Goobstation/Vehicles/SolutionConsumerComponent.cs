@@ -12,7 +12,7 @@ public sealed partial class SolutionConsumerComponent : Component
     public string FuelSolution = "motorbikeFuel";
 
     [DataField]
-    public List<ProtoId<ReagentPrototype>> AllowedReagents = ["WeldingFuel",];
+    public List<ProtoId<ReagentPrototype>> AllowedReagents = new() {"WeldingFuel"};
 
     [DataField]
     public FixedPoint2 FuelUsePerSecond = FixedPoint2.New(0.13f);

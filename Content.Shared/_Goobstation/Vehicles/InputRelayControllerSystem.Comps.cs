@@ -12,12 +12,18 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
     [Dependency] private INetManager _net = default!;
     private void CompListeners()
     {
-        SubscribeLocalEvent<RequireFreeHandComponent, InputRelayTrySetEv>(OnTrySetRelay);
+        SubscribeLocalEvent<RequireFreeHandComponent, InputRelayTrySetEv>(OnTryFreeHands);
         SubscribeLocalEvent<RequireFreeHandComponent, InputRelaySetEv>(OnSetRelay);
         SubscribeLocalEvent<RequireFreeHandComponent, InputRelayRemovedEv>(OnRemoveRelay);
+
+        SubscribeLocalEvent<EngineNeedsFuelComponent, InputRelayTrySetEv>(OnTryEngineOn);
     }
 
-    private void OnTrySetRelay(Entity<RequireFreeHandComponent> ent, ref InputRelayTrySetEv ev)
+    private void OnTryEngineOn(Entity<EngineNeedsFuelComponent> ent, ref InputRelayTrySetEv args)
+    {
+        args.Cancel = !HasComp<ActiveSolutionConsumerComponent>(ent);
+    }
+    private void OnTryFreeHands(Entity<RequireFreeHandComponent> ent, ref InputRelayTrySetEv ev)
     {
         if (TryComp<HandsComponent>(ent, out var handComp) &&
             handComp.CountFreeHands() >= ent.Comp.RequiredHands)

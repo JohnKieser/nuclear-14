@@ -9,7 +9,6 @@ namespace Content.Shared.Vehicles;
 public abstract partial class VehicleEngineSystem : EntitySystem
 {
     [Dependency] private SharedPopupSystem _popup = default!;
-    [Dependency] private SharedSolutionContainerSystem _solution = default!;
     [Dependency] private IEntityManager _entMan = default!;
     public override void Initialize()
     {
@@ -17,30 +16,24 @@ public abstract partial class VehicleEngineSystem : EntitySystem
         SubscribeLocalEvent<VehicleEngineComponent, CheckCanEngineOnEv>(EngineRequestOn);
         SubscribeLocalEvent<VehicleEngineComponent, CheckCanEngineOffEv>(EngineRequestOff);
 
-        SubscribeLocalEvent<VehicleEngineComponent, EngineOffEvent>(OnEngineOff);
-        SubscribeLocalEvent<VehicleEngineComponent, EngineOnEvent>(OnEngineOn);
+        SubscribeLocalEvent<EngineNeedsFuelComponent, EngineOffEvent>(OnEngineOff);
+        SubscribeLocalEvent<EngineNeedsFuelComponent, EngineOnEvent>(OnEngineOn);
 
         InternalLogic();
         CheckEvents();
         DirectEngineEvents();
     }
-    private void OnEngineOff(Entity<VehicleEngineComponent> ent, ref EngineOffEvent args)
+    private void OnEngineOff(Entity<EngineNeedsFuelComponent> ent, ref EngineOffEvent args)
     {
         RemComp<ActiveSolutionConsumerComponent>(ent);
     }
-    private void OnEngineOn(Entity<VehicleEngineComponent> ent, ref EngineOnEvent args)
+    private void OnEngineOn(Entity<EngineNeedsFuelComponent> ent, ref EngineOnEvent args)
     {
         EnsureComp<ActiveSolutionConsumerComponent>(ent);
     }
 
     private void EngineRequestOn(Entity<VehicleEngineComponent> ent, ref CheckCanEngineOnEv args)
     {
-        if (HasComp<ActiveSolutionConsumerComponent>(ent))
-        {
-            args.CanTurnOn = false;
-            return;
-        }
-
         var tryOnEv =  new EngineInternalTryOnEvent(ent.Comp);
         RaiseLocalEvent(ent, ref tryOnEv);
         if(args.User is not null)
@@ -51,12 +44,6 @@ public abstract partial class VehicleEngineSystem : EntitySystem
 
     private void EngineRequestOff(Entity<VehicleEngineComponent> ent, ref CheckCanEngineOffEv args)
     {
-        if (!HasComp<ActiveSolutionConsumerComponent>(ent))
-        {
-            args.CanTurnOff = false;
-            return;
-        }
-
         var tryOffEv =  new EngineInternalTryOffEvent(ent.Comp);
         RaiseLocalEvent(ent, ref tryOffEv);
         if(args.User is not null)

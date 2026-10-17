@@ -12,7 +12,7 @@ public abstract partial class VehicleEngineSystem : EntitySystem
     {
         SubscribeLocalEvent<VehicleEngineComponent, ItemSlotEjectedEvent>(OnEject);
         SubscribeLocalEvent<VehicleEngineComponent, ItemSlotInsertedEvent>(OnInsertKey);
-        SubscribeLocalEvent<VehicleEngineComponent,SolutionConsumedEv>(OnEngineFuelTick);
+        SubscribeLocalEvent<EngineNeedsFuelComponent,SolutionConsumedEv>(OnEngineFuelTick);
     }
     protected static EngineOffEvent _engineOffEvent = new();
     protected static EngineOnEvent _engineOnEvent = new();
@@ -22,7 +22,7 @@ public abstract partial class VehicleEngineSystem : EntitySystem
     private void OnEject(Entity<VehicleEngineComponent> ent, ref ItemSlotEjectedEvent args) => RaiseLocalEvent(ent, ref _engineOffEvent);
     private void OnInsertKey(Entity<VehicleEngineComponent> ent, ref ItemSlotInsertedEvent args) => RaiseLocalEvent(ent, ref _engineOnEvent);
 
-    private void OnEngineFuelTick(Entity<VehicleEngineComponent> ent, ref SolutionConsumedEv ev)
+    private void OnEngineFuelTick(Entity<EngineNeedsFuelComponent> ent, ref SolutionConsumedEv ev)
     {
         if (ev.SolutionSource.Volume > 0)
             return;

@@ -21,7 +21,6 @@ public abstract partial class VehicleEngineSystem : EntitySystem
     {
         SubscribeLocalEvent<VehicleEngineComponent, ItemSlotInsertAttemptEvent>(OnTryInsertKey);
         SubscribeLocalEvent<VehicleEngineComponent, ItemSlotEjectAttemptEvent>(OnTryEjectKey);
-
     }
 
     private void OnTryInsertKey(Entity<VehicleEngineComponent> ent, ref ItemSlotInsertAttemptEvent args)

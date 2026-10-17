@@ -3,12 +3,21 @@
   id: N14VehicleBikeBase
   abstract: true
   components:
+  - type: Spillable
+    spillDelay: 5.0
+  - type: SolutionContainerManager
+    solutions:
+      motorbikeFuel:
+        maxVol: 200
+  - type: RefillableSolution
+    solution: motorbikeFuel
   - type: Vehicle
     renderOver: None
     overlayPrototype: MisfitsMountRiderOverlay
+  - type: EngineNeedsFuel
   - type: VehicleEngine
   - type: DriveOnBuckle
-  - type: SolutionConsumerComponent
+  - type: SolutionConsumer
 #  - type: DirectionalBuckleOffset
 #    offsets:
 #      North: 0, -0.05
@@ -72,14 +81,6 @@
       - !type:TriggerBehavior
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
-  - type: RefillableSolution
-    solution: motorbikeFuel
-  - type: Spillable
-    spillDelay: 5.0
-  - type: SolutionContainerManager
-    solutions:
-      motorbikeFuel:
-        maxVol: 200
   - type: ExaminableSolution
     solution: motorbikeFuel
   - type: Strap

@@ -6,10 +6,3 @@ public sealed partial class VehicleEngineTurnOnConditionsComponent : Component
     [DataField(required: true)]
     public ConditionalPopups[] ConditionPopups = [];
 }
-
-[RegisterComponent, NetworkedComponent]
-public sealed partial class OnInsertEngineConditionsComponent : Component
-{
-    [DataField(required: true)]
-    public ConditionalPopups[] ConditionPopups = [];
-}
