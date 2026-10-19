@@ -20,7 +20,7 @@ public record struct InputRelayTrySetOffEv(EntityUid Driver, bool  Cancel = fals
 /// <summary>
 /// requires strap/buckle components
 /// </summary>
-public partial class InputRelayControllerSystem : EntitySystem
+public partial class InputRelayControllerSystem
 {
 
     [Dependency] private SharedBuckleSystem _buckle = default!;
@@ -37,8 +37,6 @@ public partial class InputRelayControllerSystem : EntitySystem
 
         CompListeners();
         EventCallBacks();
-
-
     }
 
     private void OnRemove(EntityUid uid, DriveOnBuckleComponent component, ComponentRemove args)
@@ -77,14 +75,14 @@ public partial class InputRelayControllerSystem : EntitySystem
 
     private bool ShouldUnpilot(Entity<DriveOnBuckleComponent> car, EntityUid pilot)
     {
-        _trySetOffEv = new(pilot);
+        InputRelayTrySetOffEv trySetOffEv = new(pilot);
 
-        RaiseLocalEvent(car ,ref _trySetOffEv);
-        if (_trySetOffEv.Cancel)
+        RaiseLocalEvent(car ,ref trySetOffEv);
+        if (trySetOffEv.Cancel)
             return false;
 
-        RaiseLocalEvent(pilot ,ref _trySetOffEv);
-        if (_trySetOffEv.Cancel)
+        RaiseLocalEvent(pilot ,ref trySetOffEv);
+        if (trySetOffEv.Cancel)
             return false;
 
         return true;
@@ -94,14 +92,14 @@ public partial class InputRelayControllerSystem : EntitySystem
         if (car.Comp.Pilots.Count >= car.Comp.MaxPilots)
             return false;
 
-        _trySetEv = new(pilot);
+        InputRelayTrySetEv trySetEv = new(pilot);
 
-        RaiseLocalEvent(car ,ref _trySetEv);
-        if (_trySetEv.Cancel)
+        RaiseLocalEvent(car ,ref trySetEv);
+        if (trySetEv.Cancel)
             return false;
 
-        RaiseLocalEvent(pilot ,ref _trySetEv);
-        if (_trySetEv.Cancel)
+        RaiseLocalEvent(pilot ,ref trySetEv);
+        if (trySetEv.Cancel)
             return false;
 
         return true;
@@ -110,17 +108,18 @@ public partial class InputRelayControllerSystem : EntitySystem
     {
         RemComp<RelayInputMoverComponent>(pilot);
         car.Comp.Pilots.Remove(pilot);
-        _removedEv = new(pilot, car);
-        RaiseLocalEvent(car ,ref _removedEv);
-        RaiseLocalEvent(pilot ,ref _removedEv);
+        InputRelayRemovedEv removedEv = new(pilot, car);
+        RaiseLocalEvent(car ,ref removedEv);
+        RaiseLocalEvent(pilot ,ref removedEv);
     }
     private void SetPilot(Entity<DriveOnBuckleComponent> car,EntityUid pilot)
     {
         _mover.SetRelay(pilot, car);
         car.Comp.Pilots.Add(pilot);
-        _setEv = new(pilot, car);
-        RaiseLocalEvent(car ,ref _setEv);
-        RaiseLocalEvent(pilot ,ref _setEv);
+        InputRelaySetEv setEv = new(pilot, car);
+        RaiseLocalEvent(car ,ref setEv);
+        RaiseLocalEvent(pilot ,ref setEv);
+
     }
 
     private void RemoveAllPilots(Entity<DriveOnBuckleComponent> car)

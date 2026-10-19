@@ -23,22 +23,25 @@ public abstract partial class VehicleEngineSystem : EntitySystem
         SubscribeLocalEvent<VehicleEngineComponent, ItemSlotEjectAttemptEvent>(OnTryEjectKey);
     }
 
+    private bool ShouldEngineTurnOn(Entity<VehicleEngineComponent> ent)
+    {
+        var ev = new CheckCanEngineOnEv(ent);
+        RaiseLocalEvent(ent, ref ev);
+        return ev.CanTurnOn;
+    }
+
     private void OnTryInsertKey(Entity<VehicleEngineComponent> ent, ref ItemSlotInsertAttemptEvent args)
     {
         if (args.Cancelled)
             return;
 
-        var ev = new CheckCanEngineOnEv(ent);
-        RaiseLocalEvent(ent, ref ev);
-        args.Cancelled = !ev.CanTurnOn;
+        args.Cancelled = !ShouldEngineTurnOn(ent);
     }
     private void OnTryEjectKey(Entity<VehicleEngineComponent> ent, ref ItemSlotEjectAttemptEvent args)
     {
         if (args.Cancelled)
             return;
 
-        var ev = new CheckCanEngineOffEv(ent);
-        RaiseLocalEvent(ent, ref ev);
-        args.Cancelled = !ev.CanTurnOff;
+        args.Cancelled = !ShouldEngineTurnOn(ent);
     }
 }

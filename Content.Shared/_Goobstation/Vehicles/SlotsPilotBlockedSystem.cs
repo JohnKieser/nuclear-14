@@ -12,25 +12,26 @@ public sealed class SlotsPilotBlockedSystem : EntitySystem
         SubscribeLocalEvent<SlotsPilotBlockedComponent, ItemSlotInsertAttemptEvent>(OnInsertAttempt);
         SubscribeLocalEvent<SlotsPilotBlockedComponent, ItemSlotEjectAttemptEvent>(OnEjectAttempt);
     }
-
+    //
     private void OnInsertAttempt(Entity<SlotsPilotBlockedComponent> ent, ref ItemSlotInsertAttemptEvent args)
     {
-        var pilotComp = Comp<DriveOnBuckleComponent>(ent);
-        var beingPiloted = pilotComp.Pilots.Count > 0;
-        if (!beingPiloted || (args.User is not null && pilotComp.Pilots.Contains(args.User.Value)))
-            return;
+       if(args.Cancelled) return;
 
-        if (ent.Comp.BlockedSlots.Contains(args.Slot.ID))
-            args.Cancelled = true;
+       if (TryBlock(ent, Comp<DriveOnBuckleComponent>(ent), args.Slot.ID,args.User))
+           args.Cancelled = true;
     }
     private void OnEjectAttempt(Entity<SlotsPilotBlockedComponent> ent, ref ItemSlotEjectAttemptEvent args)
     {
-        var pilotComp = Comp<DriveOnBuckleComponent>(ent);
-        var beingPiloted = pilotComp.Pilots.Count > 0;
-        if (!beingPiloted || (args.User is not null && pilotComp.Pilots.Contains(args.User.Value)))
-            return;
+        if(args.Cancelled) return;
 
-        if (ent.Comp.BlockedSlots.Contains(args.Slot.ID))
+        if (TryBlock(ent, Comp<DriveOnBuckleComponent>(ent), args.Slot.ID,args.User))
             args.Cancelled = true;
+    }
+    private static bool TryBlock(Entity<SlotsPilotBlockedComponent> ent, DriveOnBuckleComponent driveComp, string? slotId, EntityUid? user)
+    {
+        if (user is null || slotId is null || driveComp.Pilots.Count <= 0 || driveComp.Pilots.Contains(user.Value))
+            return false;
+        return ent.Comp.BlockedSlots.Contains(slotId);
+
     }
 }

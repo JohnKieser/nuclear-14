@@ -188,7 +188,7 @@ public abstract partial class SharedBuckleSystem
         // #Misfits Fix — skip position-drift check for mountable straps.
         // The mount system manages rider positioning with direction-dependent
         // offsets that intentionally deviate from BuckleOffset.
-        if (HasComp<MountableComponent>(strapUid) || HasComp<DirectionalBuckleOffsetComponent>(strapUid))
+        if (HasComp<DirectionalBuckleOffsetComponent>(strapUid))
             return;
 
         var delta = (xform.LocalPosition - strapComp.BuckleOffset).LengthSquared();
@@ -429,38 +429,6 @@ public abstract partial class SharedBuckleSystem
         return true;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BuckleToCoord(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap, Vector2 coordsLocal)
-    {
-        var xform = Transform(buckle);
-        var coords = new EntityCoordinates(strap, strap.Comp.BuckleOffset + coordsLocal);
-        _transform.SetCoordinates(buckle, xform, coords, rotation: strap.Comp.Rotation);
-        //_transform.SetCoordinates(buckle, xform, coords, rotation: Angle.Zero);
-        _joints.SetRelay(buckle, strap);
-
-        switch (strap.Comp.Position)
-        {
-            case StrapPosition.Stand:
-                _standing.Stand(buckle, force: true);
-                break;
-            case StrapPosition.Down:
-                _standing.Down(buckle, false, false);
-                break;
-        }
-
-        BuckleVisual(buckle,strap);
-        DebugTools.AssertEqual(xform.ParentUid, strap.Owner);
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void BuckleVisual(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap)
-    {
-        _audio.PlayPredicted(strap.Comp.BuckleSound, strap, buckle);
-        Appearance.SetData(strap, StrapVisuals.State, true);
-
-        Appearance.SetData(buckle, BuckleVisuals.Buckled, true);
-        _rotationVisuals.SetHorizontalAngle(buckle.Owner, strap.Comp.Rotation);
-    }
     public void Buckle(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap, EntityUid? user)
     {
         if (user == buckle.Owner)
@@ -477,12 +445,18 @@ public abstract partial class SharedBuckleSystem
         var buckleEv = new BuckledEvent(strap, buckle);
         RaiseLocalEvent(buckle, ref buckleEv);
 
-        if(!strapEv.Moved && !buckleEv.Moved)
-            BuckleToCoord(buckle, strap, Vector2.Zero);
+        var xform = Transform(buckle);
+        var coords = new EntityCoordinates(strap, strap.Comp.BuckleOffset);
+        _transform.SetCoordinates(buckle, xform, coords, rotation: strap.Comp.Rotation);
+        DebugTools.AssertEqual(xform.ParentUid, strap.Owner);
 
-        SetBuckledTo(buckle, strap!); // DeltaV - Allow standing system to handle Down/Stand before buckling
 
-        // msifits: might be redundant physics check.
+        BuckleRequiredSetup(buckle, strap);
+        BuckleVisual(buckle,strap);
+        SetBuckledTo(buckle, strap!);
+
+        // incase whatever is buckled had physics
+        // we reset their velocity ect... to 0 so they dont slide off the buckle
         if (TryComp<PhysicsComponent>(buckle, out var physics))
             _physics.ResetDynamics(buckle, physics);
 
@@ -538,46 +512,7 @@ public abstract partial class SharedBuckleSystem
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UnbuckleToPos(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap, Vector2 coordsLocal)
-    {
-        SetBuckledTo(buckle, null);
-        _joints.RefreshRelay(buckle);
-        var buckleXform = Transform(buckle);
-        var oldBuckledXform = Transform(strap);
 
-        if (buckleXform.ParentUid == strap.Owner && !Terminating(buckleXform.ParentUid))
-            UnbuckleSetPos(buckle, strap, buckleXform,oldBuckledXform, coordsLocal);
-
-        // knockdown
-        if (HasComp<KnockedDownComponent>(buckle) || _mobState.IsIncapacitated(buckle))
-            _standing.Down(buckle, playSound: false);
-        else
-            _standing.Stand(buckle);
-
-        // visuals and sound
-        _rotationVisuals.ResetHorizontalAngle(buckle.Owner);
-        Appearance.SetData(strap, StrapVisuals.State, strap.Comp.BuckledEntities.Count != 0);
-        Appearance.SetData(buckle, BuckleVisuals.Buckled, false);
-        _audio.PlayPredicted(strap.Comp.UnbuckleSound, strap, buckle);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void UnbuckleSetPos(Entity<BuckleComponent> buckle, Entity<StrapComponent> strap, TransformComponent buckleXform, TransformComponent oldBuckledXform, Vector2 pos)
-    {
-        //var entCoord = oldBuckledXform.Coordinates.Offset(strap.Comp.BuckleOffset);
-        //var newParent = Transform(entCoord.EntityId);
-        //_transform.SetCoordinates(buckle, buckleXform, entCoord,Angle.Zero, true, newParent, oldBuckledXform);
-        _transform.PlaceNextTo((buckle, buckleXform), (strap.Owner, oldBuckledXform));
-        buckleXform.ActivelyLerping = false;
-
-        var oldBuckledToWorldRot = _transform.GetWorldRotation(strap);
-        _transform.SetWorldRotationNoLerp((buckle, buckleXform), oldBuckledToWorldRot);
-
-        // TODO: This is doing 4 moveevents this is why I left the warning in, if you're going to remove it make it only do 1 moveevent.
-        if (strap.Comp.BuckleOffset != Vector2.Zero)
-            _transform.SetCoordinates(buckle, buckleXform, oldBuckledXform.Coordinates.Offset(strap.Comp.BuckleOffset+pos));
-    }
 
     public void Unbuckle(Entity<BuckleComponent?> buckle, EntityUid? user)
     {
@@ -613,10 +548,12 @@ public abstract partial class SharedBuckleSystem
         var misfitsEv = new ActorUnstrappedEvent(strap, buckle, user);
         RaiseLocalEvent(strap, misfitsEv);
 
-        if (!buckleEv.Moved && !strapEv.Moved)
-            UnbuckleToPos(buckle, strap, Vector2.Zero);
-    }
+        UnbuckleCoord(buckle, strap);
+        UnbuckleRequiredSetup(buckle, strap);
+        UnbuckleKnockdown(buckle, strap);
+        UnbuckleVisuals(buckle, strap);
 
+    }
     public bool CanUnbuckle(Entity<BuckleComponent?> buckle, EntityUid user, bool popup)
     {
         return CanUnbuckle(buckle, user, popup, out _);

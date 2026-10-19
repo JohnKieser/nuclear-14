@@ -35,10 +35,7 @@ public sealed partial class InputRelayControllerSystem : EntitySystem
         if (TerminatingOrDeleted(car))
             return;
         var dismounter = args.User;
-        var buckle = (dismounter, Comp<BuckleComponent>(dismounter));
-        var strap = (uid: car,Comp<StrapComponent>(car));
-
-        _buckle.Unbuckle(buckle, strap, dismounter);
+        _buckle.TryUnbuckle(dismounter, dismounter, false);
     }
     private void OnEngineOff(Entity<DriveOnBuckleComponent> car,  ref EngineOffEvent args)
     {
