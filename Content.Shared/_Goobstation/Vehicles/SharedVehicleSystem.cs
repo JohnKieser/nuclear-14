@@ -46,6 +46,8 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         SubscribeLocalEvent<VehicleComponent, HornActionEvent>(OnHorn);
         SubscribeLocalEvent<VehicleComponent, SirenActionEvent>(OnSiren);
 
+        SubscribeLocalEvent<VehicleComponent, StrappedEvent>(OnStrap);
+        SubscribeLocalEvent<VehicleComponent, UnstrappedEvent>(OnUnstrapped);
         SubscribeLocalEvent<VehicleComponent, EngineOnEvent>(EngineOn);
         SubscribeLocalEvent<VehicleComponent, EngineOffEvent>(EngineOff);
         // TODO: prolly change to some access comp?
@@ -54,23 +56,39 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         // TODO: comp for ActiveTimerTriggerEvent with simple light, sparkle effects, and loud hisss fuse sound
     }
 
+    protected virtual void OnStrapSetAnimate(Entity<VehicleComponent> ent){}
+    protected virtual void OnUnstrapSetAnimate(Entity<VehicleComponent> ent){}
+
+    private void OnStrap(Entity<VehicleComponent> ent, ref StrappedEvent args)
+    {
+        _appearance.SetData(ent, VehicleState.Animated, true);
+        OnStrapSetAnimate(ent);
+        // LayerSetAutoAnimated(ent, VehicleVisualLayers.AutoAnimate, true);
+    }
+
+    private void OnUnstrapped(Entity<VehicleComponent> ent, ref UnstrappedEvent args)
+    {
+        _appearance.SetData(ent, VehicleState.Animated, false);
+        OnUnstrapSetAnimate(ent);
+    }
     private void OnInit(EntityUid uid, VehicleComponent component, ComponentInit args)
     {
         _appearance.SetData(uid, VehicleState.Animated, false);
-        _appearance.SetData(uid, VehicleState.DrawOver, false);
+        // _appearance.SetData(uid, VehicleState.DrawOver, false);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EngineOn(Entity<VehicleComponent> vehicle, ref EngineOnEvent args)
     {
-        _appearance.SetData(vehicle.Owner, VehicleState.Animated, true);
+        // _appearance.SetData(vehicle.Owner, VehicleState.Animated, true);
+        // _appearance.SetData(vehicle.Owner, VehicleState.Animated, true);
         _ambientSound.SetAmbience(vehicle.Owner, true);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EngineOff(Entity<VehicleComponent> vehicle, ref EngineOffEvent args)
     {
-        _appearance.SetData(vehicle.Owner, VehicleState.Animated, false);
+        // _appearance.SetData(vehicle.Owner, VehicleState.Animated, false);
         _ambientSound.SetAmbience(vehicle.Owner, false);
     }
 
