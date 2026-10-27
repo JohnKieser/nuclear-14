@@ -2,6 +2,7 @@
 # species from attacking each other while preserving their normal hostility to
 # players and their normal hostile-animal HTN behavior.
 
+# No it doesnt. SimpleNeutral makes them hate eachother still
 - type: entity
   abstract: true
   id: N14MobMaterialExtractorWaveBase
@@ -11,28 +12,12 @@
   # normal hostile HTN can select and attack nearby players.
   - type: HTN
     rootTask:
-      task: N14MaterialExtractorWaveCompound
+      task: N14MaterialExtractorWaveCompound_melee
   - type: NpcFactionMember
     factions:
     - WastelandAnimal
-
-- type: htnCompound
-  id: N14MaterialExtractorWaveCompound
-  branches:
-  - tasks:
-    - !type:HTNPrimitiveTask
-      preconditions:
-      - !type:CoordinatesNotInRangePrecondition
-        targetKey: FollowTarget
-        rangeKey: MeleeRange
-      operator: !type:MoveToOperator
-        pathfindInPlanning: true
-        targetKey: FollowTarget
-        rangeKey: MeleeRange
-        removeKeyOnFinish: false
-  - tasks:
-    - !type:HTNCompoundTask
-      task: N14MeleeCombatCompound
+    friendlyFactions:
+    - SimpleNeutral
 
 - type: entity
   abstract: true
@@ -43,51 +28,51 @@
   # the ranged-first compound or their simulated guns are never fired.
   - type: HTN
     rootTask:
-      task: N14RangedHostileCompound
+      task: N14MaterialExtractorWaveCompound_ranged
 
 - type: entity
   id: N14MobMaterialExtractorMoleratWave
-  parent: [N14MobMolerat, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobMolerat]
 
 - type: entity
   id: N14MobMaterialExtractorGeckoWave
-  parent: [N14MobGecko, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobGecko]
 
 - type: entity
   id: N14MobMaterialExtractorFireGeckoWave
-  parent: [N14MobGeckoFire, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobGeckoFire]
 
 - type: entity
   id: N14MobMaterialExtractorRadhogWave
-  parent: [N14MobRadhog, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobRadhog]
 
 - type: entity
   id: N14MobMaterialExtractorMirelurkWave
-  parent: [N14MobMirelurk, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobMirelurk]
 
 - type: entity
   id: N14MobMaterialExtractorNightstalkerCubWave
-  parent: [N14MobNightstalkerCub, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobNightstalkerCub]
 
 - type: entity
   id: N14MobMaterialExtractorNightstalkerWave
-  parent: [N14MobNightstalker, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobNightstalker]
 
 - type: entity
   id: N14MobMaterialExtractorRadMirelurkWave
-  parent: [N14MobRadMirelurk, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobRadMirelurk]
 
 - type: entity
   id: N14MobMaterialExtractorGiantAntWave
-  parent: [N14MobGiantAnt, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase,N14MobGiantAnt]
 
 - type: entity
   id: N14MobMaterialExtractorGiantFireAntWave
-  parent: [N14MobGiantFireAnt, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobGiantFireAnt]
 
 - type: entity
   id: N14MobMaterialExtractorRadscorpionWave
-  parent: [N14MobRadscorpion, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobRadscorpion]
 
 # Strong wildlife and faction encounter wrappers. N14MobWave keeps these mobs
 # awake with long-range hostility; each keeps its native faction so members of
@@ -95,15 +80,15 @@
 
 - type: entity
   id: N14MobMaterialExtractorYaoguaiWave
-  parent: [N14MobYaoguai, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobYaoguai]
 
 - type: entity
   id: N14MobMaterialExtractorDeathclawWave
-  parent: [N14MobDeathclaw, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobDeathclaw]
 
 - type: entity
   id: N14MobMaterialExtractorRadscorpionBossWave
-  parent: [N14MobRadscorpion, N14MobMaterialExtractorWaveBase]
+  parent: [N14MobMaterialExtractorWaveBase, N14MobRadscorpion]
 
 - type: entity
   id: N14MobMaterialExtractorRaiderPistolWave

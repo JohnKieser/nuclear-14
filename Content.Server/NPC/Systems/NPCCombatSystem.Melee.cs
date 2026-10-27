@@ -12,7 +12,11 @@ namespace Content.Server.NPC.Systems;
 public sealed partial class NPCCombatSystem
 {
     [Dependency] private readonly IRobustRandom _rng = default!;
-    private const float TargetMeleeLostRange = 14f;
+    // this shutdown the entire plan an npc was executing if anything surpassed this hardcoded melee range
+    // I have no idea what the point of this was. just have that be determined by MoveTo operator/pathfinder
+    // so if anything has NPCs react/move from a range beyond 14.
+    // they would micro stutter move from restarting/shutting down the planner
+    // private const float TargetMeleeLostRange = 14f;
 
     private void InitializeMelee()
     {
@@ -82,12 +86,12 @@ public sealed partial class NPCCombatSystem
             component.Status = CombatStatus.TargetUnreachable;
             return;
         }
-
-        if (distance > TargetMeleeLostRange)
-        {
-            component.Status = CombatStatus.TargetUnreachable;
-            return;
-        }
+        // setting this failed the entire plan.
+        // if (distance > TargetMeleeLostRange)
+        // {
+        //     component.Status = CombatStatus.TargetUnreachable;
+        //     return;
+        // }
 
         if (TryComp<NPCSteeringComponent>(uid, out var steering) &&
             steering.Status == SteeringStatus.NoPath)

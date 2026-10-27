@@ -22,7 +22,9 @@ using Content.Shared.Chat;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Maps;
 using Content.Shared.Physics;
+using Content.Shared.Random.Helpers;
 using Content.Shared.Verbs;
+using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared;
 using Robust.Shared.Player;
 using Robust.Shared.Audio;
@@ -36,6 +38,8 @@ using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Server.GameObjects;
+using Robust.Shared.Physics.Systems;
+
 
 namespace Content.Server._Misfits.MaterialExtractor;
 
@@ -44,7 +48,7 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
 {
     private static readonly SoundPathSpecifier ThumpSound = new("/Audio/Effects/Footsteps/largethud.ogg");
     private const float LifecycleEmoteRange = 30f;
-
+    [Dependency] private readonly NpcFactionSystem _npcFaction = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
@@ -56,11 +60,16 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private SharedSolutionContainerSystem _solution = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private OccluderSystem _occulud = default!;
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private TurfSystem _turf = default!;
     [Dependency] private GeneratorSystem _generator = default!;
     [Dependency] private UserInterfaceSystem _ui = default!;
     [Dependency] private ExpeditionBossSystem _bosses = default!;
+
+    [Dependency] private IPrototypeManager _proto = default!;
 
     public override void Initialize()
     {
@@ -218,7 +227,7 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
                     AudioParams.Default.WithVolume(-3f).WithMaxDistance(30f));
             }
 
-            if (!extractor.WaveActive && _timing.CurTime >= extractor.NextWave)
+            if (_timing.CurTime >= extractor.NextWave)
                 StartWave(uid, extractor);
 
             if (_timing.CurTime >= extractor.NextPulse)
@@ -335,104 +344,108 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
 
     private void StartWave(EntityUid extractorUid, MaterialExtractorComponent extractor)
     {
+        if (extractor.ConsecutiveWaves != 0 && extractor.ConsecutiveWaves % 5 == 0 &&
+            extractor.ActiveAttackers.Count > 0)
+        {
+            extractor.NextWave = _timing.CurTime + TimeSpan.FromSeconds(10);
+            return;
+        }
+
+        var theme = _proto.Index(extractor.CurWaveTheme);
+        if (extractor.ConsecutiveWaves % 5 == 0)
+        {
+
+            theme = SelectWaveTheme(extractorUid, extractor);
+            extractor.CurWaveTheme = theme;
+        }
         _chat.TrySendInGameICMessage(extractorUid,
             Loc.GetString("material-extractor-rumble"),
             InGameICChatType.Emote,
             ChatTransmitRange.Normal,
             ignoreActionBlocker: true);
 
-        var theme = SelectWaveTheme(extractorUid, extractor);
-        var bossWave = theme != null &&
-                       extractor.WavesStarted + 1 >= extractor.BossWaveMinNumber &&
-                       theme.Bosses.Count > 0 &&
-                       _random.Prob(extractor.BossWaveChance);
-        var count = bossWave
-            ? 1
-            : theme == null
-                ? _random.Next(extractor.WaveMinMobCount, extractor.WaveMaxMobCount + 1)
-                : _random.Next(theme.MinCount, theme.MaxCount + 1);
-        var spawned = 0;
+        // search operation first. This also counts all players in an area
+        if (!TryFindWaveSpawnCoordinates(extractorUid, extractor, out var spawnCoordinates))
+            spawnCoordinates = Transform(extractorUid).Coordinates.Offset(_random.NextVector2(10,15));
 
-        for (var i = 0; i < count; i++)
+        extractor.WavesStartedTotal++;
+        extractor.ConsecutiveWaves++;
+
+        var themeScale = (theme.MinCount / theme.MaxCount)*extractor.ConsecutiveWaves + 1;
+
+        var count = _random.Next(extractor.WaveMinMobCount, extractor.WaveMaxMobCount + 1)*themeScale*extractor.Participants;
+        // we spawn a base mob as position reference to spawn all the other mobs with SpawnNextToOrDrop()
+        var baseMob = EntityManager.SpawnAtPosition(_random.Pick(theme.Mobs), spawnCoordinates);
+        // ai set for all mobs
+        var htn = Comp<HTNComponent>(baseMob);
+        _npcFaction.AggroEntity(baseMob, extractorUid);
+        _npc.SetBlackboard(baseMob, NPCBlackboard.FollowTarget,
+            Transform(extractorUid).Coordinates, htn);
+        _htn.Replan(htn);
+        extractor.ActiveAttackers.Add(baseMob);
+
+        SpawnMobWave(extractorUid, baseMob, extractor, theme, count);
+        var bossWave =
+            extractor.WavesStartedTotal + 1 >= extractor.BossWaveMinNumber &&
+            theme.Bosses.Count > 0 &&
+            _random.Prob(extractor.BossWaveChance);
+        if (bossWave)
         {
-            if (!TryFindWaveSpawnCoordinates(extractorUid, extractor, out var spawnCoordinates))
-                continue;
-
-            var prototype = theme == null
-                ? SelectWaveMob(extractor)
-                : SelectWeightedPrototype(bossWave ? theme.Bosses : theme.Mobs,
-                    $"material extractor theme '{theme.Name}'");
-            var attacker = EntityManager.SpawnIfUnobstructed(prototype, spawnCoordinates, CollisionGroup.MobMask);
-            if (attacker == null)
-                continue;
-
-            spawned++;
-            extractor.ActiveAttackers.Add(attacker.Value);
-
-            if (bossWave && theme != null)
-            {
-                var partySize = CountEncounterPlayers(extractorUid, extractor.EncounterPlayerRadius);
-                _bosses.ConfigureFinalGuardian(attacker.Value,
-                    GetBossFamily(theme.Family, prototype),
-                    prototype,
-                    partySize,
-                    new Random(_random.Next()));
-            }
-
-            if (TryComp<HTNComponent>(attacker.Value, out var htn))
-            {
-                _npc.SetBlackboard(attacker.Value, NPCBlackboard.FollowTarget,
-                    new EntityCoordinates(extractorUid, Vector2.Zero), htn);
-                _htn.Replan(htn);
-            }
+            var bossScale = (int)(themeScale / 5f) * extractor.BossWaveMinNumber;
+            var bossCount = Math.Max(bossScale,1);
+            SpawnMobWave(extractorUid, baseMob, extractor, theme, bossCount, bossWave);
         }
 
+        extractor.NextWave = _timing.CurTime + TimeSpan.FromSeconds(extractor.WaveMinSeconds);
         extractor.WarningSent = false;
-        if (spawned > 0)
-        {
-            extractor.WaveActive = true;
-            extractor.WavesStarted++;
-        }
-        else
-        {
-            // Invalid/blocked spawn positions should retry soon, not consume a
-            // rotation or spin every server tick.
-            extractor.NextWave = _timing.CurTime + TimeSpan.FromSeconds(5);
-        }
         SetBeacon(extractorUid, extractor, true);
     }
 
+    private void SpawnMobWave(EntityUid extractorUid, EntityUid baseMob, MaterialExtractorComponent extractor, MobWaveThemePrototype themePrototype, int count, bool bossWave = false)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            var prototype = _random.Pick(themePrototype.Mobs);
+            var attacker = EntityManager.SpawnNextToOrDrop(prototype,baseMob);
+            extractor.ActiveAttackers.Add(attacker);
+
+            if (bossWave)
+            {
+                var partySize = extractor.Participants;
+                _bosses.ConfigureFinalGuardian(attacker,
+                    GetBossFamily(themePrototype.Family, prototype),
+                    prototype,
+                    partySize,
+                    new(_random.Next()));
+            }
+
+            var htn = Comp<HTNComponent>(attacker);
+            _npcFaction.AggroEntity(attacker, extractorUid);
+            _npc.SetBlackboard(attacker, NPCBlackboard.FollowTarget,
+                Transform(extractorUid).Coordinates, htn);
+            _htn.Replan(htn);
+        }
+    }
     private TimeSpan NextWaveDelay(MaterialExtractorComponent extractor)
         => TimeSpan.FromSeconds(_random.Next(extractor.WaveMinSeconds, extractor.WaveMaxSeconds + 1));
 
-    private MaterialExtractorWaveTheme? SelectWaveTheme(EntityUid extractorUid, MaterialExtractorComponent extractor)
+    private MobWaveThemePrototype SelectWaveTheme(EntityUid extractorUid, MaterialExtractorComponent extractor)
     {
-        if (extractor.WaveThemes.Count == 0)
-            return null;
-
         var isNight = IsNight(extractorUid, extractor);
         var totalWeight = 0;
-        foreach (var theme in extractor.WaveThemes)
-        {
-            if ((!theme.NightOnly || isNight) && theme.Mobs.Count > 0 && theme.Weight > 0)
-                totalWeight += theme.Weight;
-        }
+        Dictionary<MobWaveThemePrototype, float> themes = new(extractor.WaveThemes.Count);
 
-        if (totalWeight <= 0)
-            throw new InvalidOperationException("Material extractor has no eligible wave themes with positive weight.");
-
-        var roll = _random.Next(totalWeight);
-        foreach (var theme in extractor.WaveThemes)
+        foreach (var t in extractor.WaveThemes)
         {
-            if ((theme.NightOnly && !isNight) || theme.Mobs.Count == 0 || theme.Weight <= 0)
+            var theme = _proto.Index(t);
+            if (!isNight && theme.NightOnly)
                 continue;
 
-            roll -= theme.Weight;
-            if (roll < 0)
-                return theme;
+            totalWeight += theme.Weight;
+            themes.Add(theme,theme.Weight);
         }
+        return _random.Pick(themes);
 
-        throw new InvalidOperationException("Material extractor failed to select an eligible wave theme.");
     }
 
     private bool IsNight(EntityUid extractorUid, MaterialExtractorComponent extractor)
@@ -475,98 +488,75 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         return themeFamily;
     }
 
-    private string SelectWeightedPrototype(Dictionary<string, int> prototypes, string source)
+
+    private bool ValidSpawnTile(TileRef tile)
     {
-        var totalWeight = 0;
-        foreach (var weight in prototypes.Values)
-            totalWeight += Math.Max(weight, 0);
-
-        if (totalWeight <= 0)
-            throw new InvalidOperationException($"{source} must have a positive prototype weight total.");
-
-        var roll = _random.Next(totalWeight);
-        foreach (var (prototype, weight) in prototypes)
-        {
-            roll -= Math.Max(weight, 0);
-            if (roll < 0)
-                return prototype;
-        }
-
-        throw new InvalidOperationException($"{source} failed weighted prototype selection.");
+        return !_turf.IsTileBlocked(tile, CollisionGroup.MobMask);
     }
-
     private bool TryFindWaveSpawnCoordinates(EntityUid extractorUid, MaterialExtractorComponent extractor, out EntityCoordinates spawnCoordinates)
     {
         spawnCoordinates = EntityCoordinates.Invalid;
-        var extractorTransform = Transform(extractorUid);
+        var extractorXform = Transform(extractorUid);
+
+        if(extractorXform.MapUid is null || extractorXform.GridUid is null)
+            return false;
+        // MapGridComp of the map?
+        if (!TryComp<MapGridComponent>(extractorXform.GridUid, out var gridComp))
+            return false;
+
         var extractorPosition = _transform.GetWorldPosition(extractorUid);
 
-        for (var attempt = 0; attempt < extractor.WaveSpawnAttempts; attempt++)
+        var maxPvsBox = new Box2(0,0,25,25).Translated(extractorPosition);
+        var center = -maxPvsBox.Size/2f;
+        maxPvsBox.BottomLeft += center;
+        maxPvsBox.TopRight += center;
+
+        var length = extractor.WaveSpawnMaxDistance - extractor.WaveSpawnMinDistance;
+        HashSet<Entity<ActorComponent>> playersInRange = new(100);
+
+        _lookup.GetEntitiesIntersecting(extractorXform.MapID,maxPvsBox,playersInRange, LookupFlags.Approximate);
+        extractor.Participants = playersInRange.Count;
+        for (var attempt = 0; attempt < 10; attempt++)
         {
-            var angle = _random.NextFloat() * MathF.Tau;
-            var distance = _random.NextFloat(extractor.WaveSpawnMinDistance, extractor.WaveSpawnMaxDistance);
-            var candidateMapCoordinates = new MapCoordinates(
-                extractorPosition + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * distance,
-                extractorTransform.MapID);
+            var angle = extractor.SearchPercent* MathF.Tau;
+            extractor.SearchPercent += .1f;
+            if (extractor.SearchPercent >= 1f)
+                extractor.SearchPercent = 0f;
 
-            if (IsInAnyPlayerPvs(candidateMapCoordinates, extractor.WaveSpawnPvsBuffer)
-                || !_map.TryFindGridAt(candidateMapCoordinates, out var gridUid, out var grid))
-                continue;
+            var startPos = new Vector2(extractorPosition.X ,extractorPosition.Y + extractor.WaveSpawnMinDistance);
+            var endPos = new Vector2(startPos.X, startPos.Y+length);
+            Box2 box = new(startPos, endPos);
+            Box2Rotated rayBox = new(box, angle,extractorPosition);
 
-            var tile = _map.CoordinatesToTile(gridUid, grid, candidateMapCoordinates);
-            var candidateCoordinates = _map.GridTileToLocal(gridUid, grid, tile);
-            var tileRef = _map.GetTileRef(gridUid, grid, candidateCoordinates);
-            if (tileRef.Tile.IsSpace() || _turf.IsTileBlocked(tileRef, CollisionGroup.MobMask))
-                continue;
-
-            spawnCoordinates = candidateCoordinates;
-            return true;
+            var tiles = _map.GetTilesIntersecting(extractorXform.MapUid.Value,gridComp,rayBox, true, ValidSpawnTile );
+            foreach(var tile in tiles)
+            {
+               var worldPos = _map.GridTileToWorld(tile.GridUid, gridComp, tile.GridIndices);
+               if (IsInAnyPlayerPvs(worldPos, extractor.WaveSpawnPvsBuffer, playersInRange))
+                   continue;
+               // MapGridComp of the grid/tile??
+               spawnCoordinates = _map.MapToGrid(tile.GridUid, worldPos);
+               return true;
+            }
         }
 
         return false;
     }
 
-    private bool IsInAnyPlayerPvs(MapCoordinates candidate, float buffer)
+    private bool IsInAnyPlayerPvs(MapCoordinates candidate, float buffer, HashSet<Entity<ActorComponent>> players)
     {
-        var basePvsRange = _cfg.GetCVar(CVars.NetMaxUpdateRange);
-        var query = EntityQueryEnumerator<ActorComponent, TransformComponent>();
-        while (query.MoveNext(out var playerUid, out _, out var playerTransform))
+        var basePvsRange = MathF.Sqrt( _cfg.GetCVar(CVars.NetMaxUpdateRange))/2f;
+        foreach (var playerUid in players)
         {
-            if (playerTransform.MapID != candidate.MapId)
-                continue;
-
-            var pvsScale = TryComp<EyeComponent>(playerUid, out var eye) ? MathF.Max(eye.PvsScale, 0.1f) : 1f;
-            var halfPvsRange = basePvsRange * pvsScale / 2f + buffer;
-            var playerPosition = _transform.GetWorldPosition(playerUid) + (eye?.Offset ?? Vector2.Zero);
-            var delta = Vector2.Abs(candidate.Position - playerPosition);
-            if (delta.X <= halfPvsRange && delta.Y <= halfPvsRange)
+            var pvsScale = TryComp<EyeComponent>(playerUid, out var eye) ? MathF.Max(eye.PvsScale, 1f) : 1f;
+            var pvsRangeScaled = (basePvsRange+buffer) * pvsScale;
+            if(_occulud.InRangeUnoccluded(candidate,_transform.GetMapCoordinates(playerUid), pvsRangeScaled, true))
                 return true;
         }
 
         return false;
     }
 
-    private string SelectWaveMob(MaterialExtractorComponent extractor)
-    {
-        var totalWeight = 0;
-        foreach (var weight in extractor.WaveMobWeights.Values)
-            totalWeight += weight;
-
-        if (totalWeight <= 0)
-            throw new InvalidOperationException("Material extractor wave mob weights must have a positive total.");
-
-        var roll = _random.Next(totalWeight);
-        string? fallback = null;
-        foreach (var (prototype, weight) in extractor.WaveMobWeights)
-        {
-            fallback = prototype;
-            roll -= weight;
-            if (roll < 0)
-                return prototype;
-        }
-
-        return fallback!;
-    }
 
     private void SetBeacon(EntityUid uid, MaterialExtractorComponent extractor, bool enabled)
     {

@@ -135,6 +135,8 @@
     animation: WeaponArcClaw
     wideAnimation: WeaponArcClaw
     damage:
+      types:
+        Structural: 5
       groups:
         Brute: 5
   - type: AggroSound #Misfits Change

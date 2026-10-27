@@ -1,3 +1,4 @@
+using Content.Server.GameTicking.Rules.Components;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
@@ -116,8 +117,12 @@ public sealed partial class ProximityNPCSystem : EntitySystem
         _pending.Clear();
         var query = EntityQueryEnumerator<ProximityNPCComponent>();
         while (query.MoveNext(out var uid, out _))
-            _pending.Add(uid);
+        {
+            if (HasComp<WaveMobComponent>(uid))
+                continue;
 
+            _pending.Add(uid);
+        }
         if (_pending.Count == 0)
             return;
 
@@ -145,14 +150,15 @@ public sealed partial class ProximityNPCSystem : EntitySystem
         for (var i = _pendingIndex; i < end; i++)
         {
             var uid = _pending[i];
-            // Misfit Change: TryComp(uid, out TransformComponent xform) -> XformQuery.TryGetComponent(uid, out var xform)
-            // Changed due to code warning using generic trycomp to get transformComp
+            // mifits: assuming we check proxNPC because we dont know if it got deleted or whatever.
+            //          in future prolly just have the mob be deleted if any of these are missing(mobstate, transform, HTN, physics, ect...)
+            //          test tho if that is a faster solution
             if (!TryComp(uid, out ProximityNPCComponent? prox) ||
-                !_xformQuery.TryGetComponent(uid, out var xform))
+                !TryComp<TransformComponent>(uid, out var xform) ||
+                !TryComp(uid, out MobStateComponent? state) ||
+                xform.MapID == MapId.Nullspace)
                 continue;
-            if (xform.MapID == MapId.Nullspace)
-                continue;
-            if (!TryComp(uid, out MobStateComponent? state)) continue;
+
             // #Misfits Fix — skip player-possessed mobs entirely. HTNSystem already
             // sleeps the AI on PlayerAttachedEvent; re-waking it here would re-enable
             // hostile NPC behaviour while a player/admin is in control.

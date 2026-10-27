@@ -105,7 +105,7 @@ public sealed class TileFireSystem : EntitySystem
             return;
 
         touch.NextTouchAt = _timing.CurTime + fire.Comp.TouchCooldown;
-        Dirty(target, touch);
+        //Dirty(target, touch); dont need to dirty this it is server only bro
 
         if (_flammableQuery.TryComp(target, out var flammable))
         {

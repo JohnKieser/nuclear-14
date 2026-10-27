@@ -8,6 +8,7 @@
   - type: InteractionOutline
   - type: AnimationPlayer
   - type: Appearance
+  - type: AccessReader
   - type: Physics
   - type: Fixtures
     fixtures:

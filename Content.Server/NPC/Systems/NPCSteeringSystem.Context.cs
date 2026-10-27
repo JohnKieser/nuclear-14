@@ -170,41 +170,23 @@ public sealed partial class NPCSteeringSystem
             return false;
         }
 
-        // Check if mapids match.
-        var targetMap = targetCoordinates.ToMap(EntityManager, _transform);
-        var ourMap = ourCoordinates.ToMap(EntityManager, _transform);
-
-        if (targetMap.MapId != ourMap.MapId)
+        if (!targetCoordinates.TryDelta(EntityManager, _transform, ourCoordinates, out var dist))
         {
             steering.Status = SteeringStatus.NoPath;
             return false;
         }
 
-        var direction = targetMap.Position - ourMap.Position;
-
         // Need to be pretty close if it's just a node to make sure LOS for door bashes or the likes.
-        bool arrived;
+        var arrived = dist.Length() <= steering.Range ||
+            dist.Length() <= SharedInteractionSystem.InteractionRange - 0.05f;
 
-        if (targetCoordinates.Equals(steering.Coordinates))
-        {
-            // What's our tolerance for arrival.
-            // If it's a pathfinding node it might be different to the destination.
-            arrived = direction.Length() <= steering.Range;
-        }
-        // #Misfits Fix — Use distance-based check (half the node's smallest dimension) instead
-        // of strict box containment.  Box containment fails when the NPC's physics body keeps
-        // it from fully entering the box, causing it to orbit the node edge forever.
-        else if (steering.CurrentPath.TryPeek(out var node) && IsFreeSpace(uid, steering, node))
-        {
-            var nodeHalfMin = MathF.Min(node.Box.Width, node.Box.Height) * 0.5f;
-            arrived = direction.Length() <= nodeHalfMin;
-        }
+
         // Try getting into blocked range I guess?
         // TODO: Consider melee range or the likes.
-        else
-        {
-            arrived = direction.Length() <= SharedInteractionSystem.InteractionRange - 0.05f;
-        }
+        // else
+        // {
+        //     arrived = direction.Length() <= SharedInteractionSystem.InteractionRange - 0.05f;
+        // }
 
         // Are we in range
         if (arrived)
@@ -221,7 +203,7 @@ public sealed partial class NPCSteeringSystem
                 {
                     // MISFIT CHANGE: This made it way more likely NPCs just danced infinitely
                     // They wouldn't ever stop to attack an obstacle since the steerer would tell them
-                    // to avoid said obstacle
+                    // to avoid said obstacle if they were still moving
                     /*
                     // We're still coming to a stop so wait for the do_after.
                     if (body.LinearVelocity.LengthSquared() > 0.01f)
@@ -262,26 +244,20 @@ public sealed partial class NPCSteeringSystem
                 // Alright just adjust slightly and grab the next node so we don't stop moving for a tick.
                 // TODO: If it's the last node just grab the target instead.
                 targetCoordinates = GetTargetCoordinates(steering);
-
-                if (!targetCoordinates.IsValid(EntityManager))
+                if (!targetCoordinates.TryDelta(EntityManager, _transform, ourCoordinates, out var dist2))
                 {
                     SetDirection(uid, mover, steering, Vector2.Zero);
                     steering.Status = SteeringStatus.NoPath;
                     return false;
                 }
 
-                targetMap = _transform.ToMapCoordinates(targetCoordinates);
+                dist = dist2;
+                // Need to be pretty close if it's just a node to make sure LOS for door bashes or the likes.
+                var arrived2 = dist.Length() <= steering.Range ||
+                    dist.Length() <= SharedInteractionSystem.InteractionRange - 0.05f;
 
-                // Can't make it again.
-                if (ourMap.MapId != targetMap.MapId)
-                {
-                    SetDirection(uid, mover, steering, Vector2.Zero);
-                    steering.Status = SteeringStatus.NoPath;
-                    return false;
-                }
 
-                // Gonna resume now business as usual
-                direction = targetMap.Position - ourMap.Position;
+
 
                 // #Misfits Fix — Only reset the stuck timer when the NPC has actually moved
                 // a meaningful distance since the last stuck checkpoint. Without this gate,
@@ -352,19 +328,19 @@ public sealed partial class NPCSteeringSystem
         if (steering is { Pathfind: true, CurrentPath.Count: 0 })
             return true;
 
-        if (moveSpeed == 0f || direction == Vector2.Zero)
+        if (moveSpeed == 0f || dist == Vector2.Zero)
         {
             steering.Status = SteeringStatus.NoPath;
             return false;
         }
 
-        var input = direction.Normalized();
+        var input = dist.Normalized();
         var tickMovement = moveSpeed * frameTime;
 
         // We have the input in world terms but need to convert it back to what movercontroller is doing.
         input = offsetRot.RotateVec(input);
         var norm = input.Normalized();
-        var weight = MapValue(direction.Length(), tickMovement * 0.5f, tickMovement * 0.75f);
+        var weight = MapValue(dist.Length(), tickMovement * 0.5f, tickMovement * 0.75f);
 
         ApplySeek(interest, norm, weight);
 

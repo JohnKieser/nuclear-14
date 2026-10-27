@@ -40,7 +40,11 @@ public sealed partial class MaterialExtractorComponent : Component
     [DataField] public float EncounterPlayerRadius = 20f;
     [DataField] public float NightStart = 0.75f;
     [DataField] public float NightEnd = 0.965f;
-    [DataField] public List<MaterialExtractorWaveTheme> WaveThemes = new();
+
+    [DataField(required: true),ViewVariables(VVAccess.ReadOnly)]
+    public List<ProtoId<MobWaveThemePrototype>> WaveThemes = new();
+
+
     [DataField] public Dictionary<string, int> WaveMobWeights = new()
     {
         ["N14MobMaterialExtractorMoleratWave"] = 24,
@@ -62,34 +66,50 @@ public sealed partial class MaterialExtractorComponent : Component
     [DataField] public float LowFuelWarningFraction = 0.25f;
     [DataField] public string FuelSolution = "tank";
     [DataField] public ProtoId<ReagentPrototype> FuelReagent = "WeldingFuel";
-
+    [ViewVariables(VVAccess.ReadOnly)]
+    public ProtoId<MobWaveThemePrototype> CurWaveTheme = "MobWave_WildLife";
     public TimeSpan NextPulse;
+    [ViewVariables(VVAccess.ReadOnly)]
     public TimeSpan NextWave;
+    [ViewVariables(VVAccess.ReadOnly)]
     public TimeSpan DamagePauseUntil;
     public bool BeaconOn;
     public bool WarningSent;
     public bool LowFuelWarningIssued;
+    [ViewVariables(VVAccess.ReadOnly)]
     public bool WasRunning;
     public bool WaveActive;
-    public int WavesStarted;
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int WavesStartedTotal = 0;
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int ConsecutiveWaves = 0;
+    [ViewVariables(VVAccess.ReadOnly)]
     public readonly HashSet<EntityUid> ActiveAttackers = [];
     public float YieldMultiplier = 1f;
     public string DepositQuality = "FAIR";
+    [ViewVariables(VVAccess.ReadOnly)]
+    public float SearchPercent = 0;
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int Participants = 0;
 }
 
 /// <summary>
 /// One faction-safe extractor encounter. A wave selects exactly one theme, then
 /// draws every member from that theme so unrelated factions never overlap.
 /// </summary>
+[Prototype("MobWaveTheme")]
 [DataDefinition]
-public sealed partial class MaterialExtractorWaveTheme
+public sealed partial class MobWaveThemePrototype : IPrototype
 {
+    [IdDataField]
+    public string ID { get; set; } = default!;
     [DataField(required: true)] public string Name = string.Empty;
+    [DataField(required: true)] public Dictionary<EntProtoId, float> Mobs = new();
+    [DataField] public Dictionary<EntProtoId, float> Bosses = new();
+
     [DataField] public int Weight = 1;
     [DataField] public int MinCount = 1;
     [DataField] public int MaxCount = 3;
-    [DataField] public bool NightOnly;
+    [DataField] public bool NightOnly = false;
     [DataField] public ExpeditionMobFamily Family = ExpeditionMobFamily.Wildlife;
-    [DataField(required: true)] public Dictionary<string, int> Mobs = new();
-    [DataField] public Dictionary<string, int> Bosses = new();
 }

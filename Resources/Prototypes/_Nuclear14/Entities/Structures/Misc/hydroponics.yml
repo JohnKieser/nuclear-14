@@ -87,6 +87,17 @@
   - type: Rotatable
   - type: Machine
     board: SeedExtractorMachineCircuitboard
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
 
 - type: entity
   id: N14SeedExtractorFrame
@@ -111,6 +122,17 @@
   - type: Construction
     graph: N14SeedExtractor
     node: seedextractorhalf
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
 
 # Soils and Planters
 - type: entity

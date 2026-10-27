@@ -1,16 +1,13 @@
-using Content.Server.Destructible;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
-using Content.Shared.Climbing;
 using Content.Shared.CombatMode;
+using Content.Shared.Damage;
 using Content.Shared.DoAfter;
 using Content.Shared.Doors.Components;
 using Content.Shared.NPC;
-using Content.Shared.Weapons.Melee;
-using Robust.Shared.Map;
+using Content.Shared.NPC.Systems;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Utility;
 using ClimbableComponent = Content.Shared.Climbing.Components.ClimbableComponent;
 using ClimbingComponent = Content.Shared.Climbing.Components.ClimbingComponent;
@@ -19,6 +16,7 @@ namespace Content.Server.NPC.Systems;
 
 public sealed partial class NPCSteeringSystem
 {
+    [Dependency] private NpcFactionSystem _faction = default!;
     /*
      * For any custom path handlers, e.g. destroying walls, opening airlocks, etc.
      * Putting it onto steering seemed easier than trying to make a custom compound task for it.
@@ -78,13 +76,14 @@ public sealed partial class NPCSteeringSystem
             }
 
             var obstacleEnts = new List<EntityUid>();
-
             GetObstacleEntities(poly, mask, layer, obstacleEnts);
+            obstacleEnts = obstacleEnts.Where(x => x != uid || !_faction.TryIsEntityFriend(uid, x)).ToList();
+            if (obstacleEnts.Count == 0)
+                return SteeringObstacleStatus.Completed;
+
             var isDoor = (poly.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
             var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
-            var destructibleQuery = GetEntityQuery<DestructibleComponent>();
-            var hasDestructibleObstacle = obstacleEnts.Exists(destructibleQuery.HasComponent);
 
             // Just walk into it stupid
             if (isDoor && !isAccessRequired)
@@ -129,33 +128,21 @@ public sealed partial class NPCSteeringSystem
                     }
                 }
 
-                if (obstacleEnts.Count == 0)
-                    return SteeringObstacleStatus.Completed;
             }
             // Smash destructible blockers before considering a vault.  This is the
             // intended hostile-mob behaviour for railings, fences, and barricades:
             // those entities are both climbable and destructible, but a smasher should
             // clear the route instead of repeatedly starting a movement-breaking climb.
-            else if ((component.Flags & PathFlags.Smashing) != 0x0 && hasDestructibleObstacle)
+            else if ((component.Flags & PathFlags.Smashing) != 0x0)
             {
-                // Resolve the melee weapon to use for smashing.
-                // TryGetWeapon short-circuits when holding a non-melee item, so fall back
-                // to the entity's own innate MeleeWeaponComponent (e.g. unarmed fists).
-                MeleeWeaponComponent? meleeWeapon;
-                EntityUid weaponUid;
-                if (!_melee.TryGetWeapon(uid, out weaponUid, out meleeWeapon))
-                {
-                    if (!TryComp<MeleeWeaponComponent>(uid, out meleeWeapon))
+                if (!_melee.TryGetWeapon(uid, out var weaponUid, out var meleeWeapon))
                         return SteeringObstacleStatus.Failed;
-                    weaponUid = uid;
-                }
 
                 if (TryComp<CombatModeComponent>(uid, out var combatMode))
                 {
                     // Weapon still on cooldown — keep waiting instead of failing the path.
                     if (meleeWeapon.NextAttack > _timing.CurTime)
                         return SteeringObstacleStatus.Continuing;
-
                     _combat.SetInCombatMode(uid, true, combatMode);
                     // TODO: This is a hack around grilles and windows.
                     _random.Shuffle(obstacleEnts);
@@ -164,11 +151,8 @@ public sealed partial class NPCSteeringSystem
                     foreach (var ent in obstacleEnts)
                     {
                         // TODO: Validate we can damage it
-                        if (destructibleQuery.HasComponent(ent))
-                        {
-                            attackResult = _melee.AttemptLightAttack(uid, weaponUid, meleeWeapon, ent);
-                            break;
-                        }
+                        attackResult = _melee.AttemptLightAttack(uid, weaponUid, meleeWeapon, ent);
+                        break;
                     }
 
                     _combat.SetInCombatMode(uid, false, combatMode);
@@ -235,9 +219,14 @@ public sealed partial class NPCSteeringSystem
         // Changed to method that is able to target all obstacles(dynamic/static) that should probably be attacked
         // Previous method was only limited to targetting anchored(static) entities
         // bounding box is shrunk by BOX_ENLARGEMENT so it doesn't intersect with other obstacles outside its own tile
-        foreach (var ent in _lookup.GetLocalEntitiesIntersecting(poly.GraphUid, pathTile.GridIndices,
-                                                            BOX_ENLARGEMENT, LookupFlags.Dynamic | LookupFlags.Static))
-        // END CHANGE
+
+        HashSet<Entity<DamageableComponent>> intersecting = new(10);
+        _lookup.GetLocalEntitiesIntersecting(
+            poly.GraphUid,pathTile.GridIndices,
+            intersecting, BOX_ENLARGEMENT,
+            LookupFlags.Dynamic | LookupFlags.Static);
+
+        foreach (var ent in intersecting)
         {
             if (!_physicsQuery.TryGetComponent(ent, out var body) ||
                 !body.Hard ||

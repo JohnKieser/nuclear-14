@@ -474,6 +474,7 @@
   components:
   - type: ProximityNPC # Misfits Tweak — wave mobs inherit ProximityNPC from their hostile parent; override to stay awake so they rush immediately
     startAsleep: false
+  - type: ActiveNPC
   - type: HTN
     rootTask:
       task: N14HostileCompound
@@ -490,13 +491,15 @@
         true
       VisionRadius: !type:Single
         1000.0
+      AggroVisionRadius: !type:Single
+        10000.0
       MeleeRange: !type:Single
         1.5
   - type: WaveMob
     difficulty: 1
   - type: GhostTakeoverAvailable
   - type: GhostRole
-    prob: 0.33
+    prob: 1
     makeSentient: true
     name: hostile wildlife # wave defence
     description: |

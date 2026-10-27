@@ -252,7 +252,25 @@ public sealed partial class NpcFactionSystem : EntitySystem
 
         return intersect.Count() > 0 || ent.Comp.FriendlyFactions.Overlaps(other.Comp.Factions);
     }
+    /// <summary>
+    /// For cases where we dont want to resolve the comp on entities
+    /// like if the selected entity is a structure
+    /// default to false since cant be friends with strangers
+    /// </summary>
+    /// <remarks>
+    /// Made for NPC steerer where in this fork a given obstacle can be dynamic and static
+    /// So it can be something meant to have NPCFactionComp or it could not be
+    /// </remarks>>
+    public bool TryIsEntityFriend(EntityUid ent, EntityUid other)
+    {
+        if (!TryComp<NpcFactionMemberComponent>(ent, out var comp) ||
+            !TryComp<NpcFactionMemberComponent>(ent, out var comp1))
+        {
+            return false;
+        }
 
+        return !IsEntityHostile((ent,comp),  (other,comp1));
+    }
     public bool IsEntityHostile(Entity<NpcFactionMemberComponent?, FactionExceptionComponent?> ent, Entity<NpcFactionMemberComponent?> other)
     {
         if (!Resolve(ent, ref ent.Comp1, false) || !Resolve(other, ref other.Comp, false))

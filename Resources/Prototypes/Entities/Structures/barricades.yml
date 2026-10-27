@@ -73,6 +73,7 @@
   - type: Sprite
     sprite: Structures/barricades.rsi
     state: barricade
+  - type: Overlapper
 
 #Directional Barricade
 - type: entity
