@@ -29,7 +29,8 @@ using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Weapons.Ranged.Systems;
 using Content.Shared._Misfits.Grab; // #Misfits Add - grab intent integration
 using Content.Shared._Misfits.MartialArts; // #Misfits Add - combo attack event integration
-using Content.Shared._Misfits.Deathclaw; // #Cythisiax Add - allow explicit non-Damageable structure targets
+using Content.Shared._Misfits.Deathclaw;
+using Content.Shared._Misfits.Movement; // #Cythisiax Add - allow explicit non-Damageable structure targets
 using Content.Shared.Movement.Pulling.Components; // #Misfits Add - check if puller is attacking pulled target
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
@@ -41,8 +42,10 @@ using ItemToggleMeleeWeaponComponent = Content.Shared.Item.ItemToggle.Components
 
 namespace Content.Shared.Weapons.Melee;
 
-public abstract class SharedMeleeWeaponSystem : EntitySystem
+public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 {
+    [Dependency] private INetManager _net = default!;
+    [Dependency] protected SharedMisfitsLagCompensationSystem _lag = default!;
     [Dependency] protected readonly ISharedAdminLogManager   AdminLogger     = default!;
     [Dependency] protected readonly ActionBlockerSystem      Blocker         = default!;
     [Dependency] protected readonly SharedCombatModeSystem   CombatMode      = default!;
@@ -51,18 +54,18 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
     [Dependency] protected readonly SharedMapSystem              MapManager      = default!;
     [Dependency] protected readonly SharedPopupSystem        PopupSystem     = default!;
     [Dependency] protected readonly IGameTiming              Timing          = default!;
-    [Dependency] protected readonly SharedTransformSystem    TransformSystem = default!;
+    [Dependency] protected readonly SharedTransformSystem    Xform = default!;
     [Dependency] private   readonly InventorySystem         _inventory       = default!;
-    [Dependency] private   readonly EntityLookupSystem      _lookup          = default!;
+    [Dependency] protected   readonly EntityLookupSystem      _lookup          = default!;
     [Dependency] private   readonly MeleeSoundSystem        _meleeSound      = default!;
-    [Dependency] private   readonly SharedPhysicsSystem     _physics         = default!;
+    [Dependency] protected readonly SharedPhysicsSystem     _physics         = default!;
     [Dependency] private   readonly IPrototypeManager       _protoManager    = default!;
     [Dependency] private   readonly StaminaSystem           _stamina         = default!;
     [Dependency] private   readonly ContestsSystem          _contests        = default!;
     // #Misfits Add - grab intent system reference for grab-type light attack interception
     [Dependency] private   readonly GrabIntentSystem          _grabIntent      = default!;
 
-    private const int AttackMask = (int) (CollisionGroup.MobMask | CollisionGroup.Opaque);
+    protected const int AttackMask = (int) (CollisionGroup.MobMask | CollisionGroup.Opaque);
     protected const float WideArcTolerance = 0.05f;
 
     public override void Initialize()
@@ -458,7 +461,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
                     throw new NotImplementedException();
             }
 
-            DoLungeAnimation(user, weaponUid, weapon.Angle, TransformSystem.ToMapCoordinates(GetCoordinates(attack.Coordinates)), weapon.Range, animation);
+            DoLungeAnimation(user, weaponUid, weapon.Angle, Xform.ToMapCoordinates(GetCoordinates(attack.Coordinates)), weapon.Range, animation);
         }
 
         var attackEv = new MeleeAttackEvent(weaponUid);
@@ -598,7 +601,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
             !HasComp<TransformComponent>(coordinateEntity.Value))
             return false;
 
-        var targetMap = TransformSystem.ToMapCoordinates(GetCoordinates(ev.Coordinates));
+        var targetMap = Xform.ToMapCoordinates(GetCoordinates(ev.Coordinates));
 
         if (targetMap.MapId != userXform.MapID)
             return false;
@@ -614,7 +617,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
             _stamina.TakeStaminaDamage(user, component.HeavyStaminaCost, stamina, visual: false);
         }
 
-        var userPos = TransformSystem.GetWorldPosition(userXform);
+        var userPos = Xform.GetWorldPosition(userXform);
         var direction = targetMap.Position - userPos;
         // [Changed by MisfitsCrew/Operator] Wide swings use the cursor for direction, not reach;
         // otherwise the swing only hits when the cursor is placed over the target.
@@ -651,16 +654,16 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
 
         // [Changed by MisfitsCrew/Operator] Recover server-side candidates only after bogus
         // client entries have been removed, so stale or malicious max-target lists cannot block prediction correction.
-        AddHeavyAttackCandidates(entities,
-            user,
-            meleeUid,
-            component,
-            userPos,
-            direction.ToWorldAngle(),
-            distance,
-            userXform.MapID,
-            session,
-            ev.LastRealTick);
+        // AddHeavyAttackCandidates(entities,
+        //     user,
+        //     meleeUid,
+        //     component,
+        //     userPos,
+        //     direction.ToWorldAngle(),
+        //     distance,
+        //     userXform.MapID,
+        //     session,
+        //     ev.LastRealTick);
 
         if (entities.Count == 0)
         {
@@ -782,89 +785,23 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         return true;
     }
 
-    protected HashSet<EntityUid> ArcRayCast(Vector2 position, Angle angle, Angle arcWidth, float range, MapId mapId, EntityUid ignore)
-    {
-        // TODO: This is pretty sucky.
-        var widthRad = arcWidth;
-        var increments = 1 + 35 * (int) Math.Ceiling(widthRad / (2 * Math.PI));
-        var increment = widthRad / increments;
-        var baseAngle = angle - widthRad / 2;
-        var extraIgnored = GetUserExtraIgnoredEntity(ignore);
-
-        var resSet = new HashSet<EntityUid>();
-
-        for (var i = 0; i < increments; i++)
-        {
-            var castAngle = new Angle(baseAngle + increment * i);
-            // [Changed by MisfitsCrew/Operator] Ignore both the attacker and their mounted vehicle
-            // so rider wide swings do not select the bike as the first arc hit.
-            var res = _physics.IntersectRayWithPredicate(mapId,
-                new CollisionRay(position,
-                    castAngle.ToWorldVec(),
-                    AttackMask),
-                (User: ignore, Extra: extraIgnored),
-                static (hit, ignored) => hit == ignored.User || hit == ignored.Extra,
-                range,
-                false)
-                .ToList();
-
-            if (res.Count != 0)
-            {
-                resSet.Add(res[0].HitEntity);
-            }
-        }
-
-        AddArcBoundsCandidates(resSet, position, angle, arcWidth, range, mapId, ignore, extraIgnored);
-
-        return resSet;
-    }
-
-    private void AddArcBoundsCandidates(
-        HashSet<EntityUid> result,
-        Vector2 position,
-        Angle angle,
-        Angle arcWidth,
-        float range,
-        MapId mapId,
-        EntityUid ignore,
-        EntityUid? extraIgnored)
-    {
-        // [Changed by MisfitsCrew/Operator] Add physical edge-overlap candidates during
-        // client prediction too, so edge wide swings do not damage without local feedback.
-        var bounds = Box2.CenteredAround(position, new Vector2(range * 2f, range * 2f));
-        var candidates = _lookup.GetEntitiesIntersecting(mapId, bounds, LookupFlags.Dynamic);
-
-        foreach (var candidate in candidates)
-        {
-            if (result.Contains(candidate) ||
-                candidate == ignore ||
-                candidate == extraIgnored ||
-                !HasComp<DamageableComponent>(candidate) ||
-                !TryComp(candidate, out TransformComponent? xform) ||
-                !TryComp(candidate, out FixturesComponent? fixtures))
-            {
-                continue;
-            }
-
-            if (TargetBoundsOverlapArc(xform.Coordinates, xform.LocalRotation, fixtures, position, angle, arcWidth, range))
-                result.Add(candidate);
-        }
-    }
-
-    private bool TargetBoundsOverlapArc(
+    protected bool TargetBoundsOverlapArc(
+        EntityUid targetUid,
         EntityCoordinates targetCoords,
         Angle targetLocalAngle,
-        FixturesComponent fixtures,
         Vector2 origin,
         Angle angle,
         Angle arcWidth,
         float range)
     {
-        var targetMap = TransformSystem.ToMapCoordinates(targetCoords);
+        if (!TryComp<FixturesComponent>(targetUid, out var fixtures))
+            return false;
+
+        var targetMap = Xform.ToMapCoordinates(targetCoords);
         if (targetMap.MapId == MapId.Nullspace)
             return false;
 
-        var worldAngle = TransformSystem.GetWorldRotation(targetCoords.EntityId) + targetLocalAngle;
+        var worldAngle = Xform.GetWorldRotation(targetCoords.EntityId) + targetLocalAngle;
         var transform = new Transform(targetMap.Position, worldAngle);
         var initialized = false;
         var bounds = new Box2(targetMap.Position, targetMap.Position);
@@ -872,7 +809,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         foreach (var fixture in fixtures.Fixtures.Values)
         {
             if (!fixture.Hard ||
-                (fixture.CollisionLayer & AttackMask) == 0)
+                (fixture.CollisionLayer & (int) (CollisionGroup.MobMask | CollisionGroup.Opaque)) == 0)
             {
                 continue;
             }
@@ -888,6 +825,8 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         if (!initialized)
             return false;
 
+        // [Changed by MisfitsCrew/Operator] Center-point arc checks reject edge hits on wide
+        // swings; accept when the target's physical bounds overlap the validated swing sector.
         var halfArc = arcWidth / 2.0 + WideArcTolerance;
         foreach (var point in GetBoxTestPoints(bounds, origin))
         {
@@ -903,7 +842,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
                SegmentIntersectsBox(origin, rightEnd, bounds);
     }
 
-    protected static IEnumerable<Vector2> GetBoxTestPoints(Box2 bounds, Vector2 origin)
+    private static IEnumerable<Vector2> GetBoxTestPoints(Box2 bounds, Vector2 origin)
     {
         yield return bounds.BottomLeft;
         yield return bounds.BottomRight;
@@ -914,7 +853,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
             Math.Clamp(origin.Y, bounds.Bottom, bounds.Top));
     }
 
-    protected static bool PointInArc(Vector2 point, Vector2 origin, Angle angle, Angle halfArc, float range)
+    private static bool PointInArc(Vector2 point, Vector2 origin, Angle angle, Angle halfArc, float range)
     {
         var delta = point - origin;
         if (delta.LengthSquared() > range * range || delta.LengthSquared() <= 0.001f)
@@ -923,7 +862,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         return Math.Abs((double) Angle.ShortestDistance(angle, delta.ToWorldAngle())) <= (double) halfArc;
     }
 
-    protected static bool SegmentIntersectsBox(Vector2 start, Vector2 end, Box2 box)
+    private static bool SegmentIntersectsBox(Vector2 start, Vector2 end, Box2 box)
     {
         if (box.Contains(start))
             return true;
@@ -957,7 +896,6 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         max = Math.Min(max, exit);
         return max >= min;
     }
-
     protected virtual void AddHeavyAttackCandidates(
         List<EntityUid> entities,
         EntityUid user,
@@ -980,7 +918,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         return GetUserExtraIgnoredEntity(user) == entity;
     }
 
-    private EntityUid? GetUserExtraIgnoredEntity(EntityUid user)
+    protected EntityUid? GetUserExtraIgnoredEntity(EntityUid user)
     {
         if (TryComp<BuckleComponent>(user, out var buckle) &&
             buckle.BuckledTo is { } buckledTo &&
@@ -1005,10 +943,58 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         ICommonSession? session,
         GameTick? lastRealTick = null)
     {
-        // Only matters for server.
-        return true;
-    }
+        // Originally the client didn't predict damage effects so you'd intuit some level of how far
+        // in the future you'd need to predict, but then there was a lot of complaining like "why would you add artifical delay" as if ping is a choice.
+        // Now damage effects are predicted but for wide attacks it differs significantly from client and server so your game could be lying to you on hits.
+        // This isn't fair in the slightest because it makes ping a huge advantage and this would be a hidden system.
+        // Now the client tells us what they hit and we validate if it's plausible.
 
+        // Even if the client is sending entities they shouldn't be able to hit:
+        // A) Wide-damage is split anyway
+        // B) We run the same validation we do for click attacks.
+        var inRange = AttackInRange(
+            targetUid,
+            range + WideArcTolerance,
+            ignore,
+            session,
+            out var targetCoords,
+            out var targetLocalAngle,
+            lastRealTick);
+        if (!inRange)
+            return false;
+
+        //if (targetMapPos.MapId == mapId)
+        //if (toTarget.LengthSquared() > 0.001f)
+
+        var targetMapPos = Xform.ToMapCoordinates(targetCoords);
+        var toTarget = targetMapPos.Position - position;
+
+        var diff = Angle.ShortestDistance(angle, toTarget.ToWorldAngle());
+        return !(Math.Abs((double) diff) > (double) arcWidth / 2.0 + WideArcTolerance) ||
+            TargetBoundsOverlapArc(targetUid, targetCoords, targetLocalAngle, position, angle, arcWidth, range + WideArcTolerance);
+    }
+    protected bool AttackInRange(EntityUid targetUid, float range,
+        EntityUid ignore, ICommonSession? session,out EntityCoordinates targetCoords,out Angle targetLocalAngle, GameTick? lastRealTick = null)
+    {
+        var xform = Transform(targetUid);
+        var lagComp = !_net.IsClient && session is not null;
+        var ev = new InRangeOverrideEvent(ignore,targetUid,range, lagComp);
+        RaiseLocalEvent(ignore,ref ev);
+        RaiseLocalEvent(targetUid,ref ev);
+        targetCoords = xform.Coordinates;
+        targetLocalAngle = xform.LocalRotation;
+
+        if (ev.LagComp)
+        {
+            (targetCoords, targetLocalAngle) = lastRealTick is { } tick
+                ? _lag.GetCoordinatesAngle(targetUid, tick - 1)
+                : _lag.GetCoordinatesAngle(targetUid, session);
+        }
+
+        return ev.Handled
+            ? ev.InRange
+            : Interaction.InRangeUnobstructed(ignore, targetUid, targetCoords, targetLocalAngle, range);
+    }
 
     public static string? GetHighestDamageSound(DamageSpecifier modifiedDamage, IPrototypeManager protoManager)
     {
@@ -1055,7 +1041,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         if (!TryComp(user, out TransformComponent? userXform))
             return;
 
-        var invMatrix = TransformSystem.GetInvWorldMatrix(userXform);
+        var invMatrix = Xform.GetInvWorldMatrix(userXform);
         var localPos = Vector2.Transform(coordinates.Position, invMatrix);
 
         if (localPos.LengthSquared() <= 0f)

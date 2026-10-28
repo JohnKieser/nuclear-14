@@ -79,10 +79,10 @@ public sealed partial class MeleeWeaponSystem
                     _animation.Play(animationUid, GetFadeAnimation(sprite, 0.05f, 0.15f), FadeAnimationKey);
                 break;
             case WeaponArcAnimation.None:
-                var (mapPos, mapRot) = TransformSystem.GetWorldPositionRotation(userXform);
+                var (mapPos, mapRot) = base.Xform.GetWorldPositionRotation(userXform);
                 var worldPos = mapPos + (mapRot - userXform.LocalRotation).RotateVec(localPos);
-                var newLocalPos = Vector2.Transform(worldPos, TransformSystem.GetInvWorldMatrix(xform.ParentUid));
-                TransformSystem.SetLocalPositionNoLerp(animationUid, newLocalPos, xform);
+                var newLocalPos = Vector2.Transform(worldPos, base.Xform.GetInvWorldMatrix(xform.ParentUid));
+                base.Xform.SetLocalPositionNoLerp(animationUid, newLocalPos, xform);
                 if (arcComponent.Fadeout)
                     _animation.Play(animationUid, GetFadeAnimation(sprite, 0f, 0.15f), FadeAnimationKey);
                 break;
@@ -231,15 +231,15 @@ public sealed partial class MeleeWeaponSystem
             if (!_xformQuery.TryGetComponent(arcComponent.User.Value, out var userXform))
                 continue;
 
-            Vector2 targetPos = TransformSystem.GetWorldPosition(userXform);
+            Vector2 targetPos = base.Xform.GetWorldPosition(userXform);
 
             if (arcComponent.Offset != Vector2.Zero)
             {
-                var entRotation = TransformSystem.GetWorldRotation(xform);
+                var entRotation = base.Xform.GetWorldRotation(xform);
                 targetPos += entRotation.RotateVec(arcComponent.Offset);
             }
 
-            TransformSystem.SetWorldPosition(xform, targetPos);
+            base.Xform.SetWorldPosition(xform, targetPos);
         }
     }
 }

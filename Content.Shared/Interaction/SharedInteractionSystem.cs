@@ -1519,12 +1519,12 @@ namespace Content.Shared.Interaction
     /// Override event raised directed on a user to check InRangeUnoccluded AND InRangeUnobstructed to the target if you require custom logic.
     /// </summary>
     [ByRefEvent]
-    public record struct InRangeOverrideEvent(EntityUid User, EntityUid Target, float Range)
+    public record struct InRangeOverrideEvent(EntityUid User, EntityUid Target, float Range, bool LagComp = false)
     {
         public readonly EntityUid User = User;
         public readonly EntityUid Target = Target;
         public readonly float Range = Range;
-
+        public readonly bool LagComp = LagComp;
         public bool Handled;
         public bool InRange = false;
     }

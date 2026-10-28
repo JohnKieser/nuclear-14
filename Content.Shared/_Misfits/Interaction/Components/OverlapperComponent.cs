@@ -7,9 +7,9 @@ namespace Content.Shared._Misfits.Interaction.Components;
 /// Most other cases such as melee are covered by the Overlapper itself
 /// CANNOT exist without a parent that isnt a grid/map
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class OverlapperComponent : Component
 {
-    [ViewVariables]
+    [ViewVariables, AutoNetworkedField]
     public EntityUid Parent =  EntityUid.Invalid;
 }

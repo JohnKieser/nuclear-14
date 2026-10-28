@@ -1,8 +1,10 @@
 using System.Linq;
+using System.Numerics;
 using Content.Client._Misfits.Movement;
 using Content.Client.Gameplay;
 using Content.Shared.CCVar;
 using Content.Shared.CombatMode;
+using Content.Shared.Damage;
 using Content.Shared.Effects;
 using Content.Shared.Hands.Components;
 using Content.Shared.Mobs.Components;
@@ -18,6 +20,7 @@ using Robust.Client.Player;
 using Robust.Client.State;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
@@ -116,11 +119,11 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
 
         if (MapManager.TryFindGridAt(mousePos, out var gridUid, out _))
         {
-            coordinates = EntityCoordinates.FromMap(gridUid, mousePos, TransformSystem, EntityManager);
+            coordinates = EntityCoordinates.FromMap(gridUid, mousePos, Xform, EntityManager);
         }
         else
         {
-            coordinates = EntityCoordinates.FromMap(MapManager.GetMap(mousePos.MapId), mousePos, TransformSystem, EntityManager);
+            coordinates = EntityCoordinates.FromMap(MapManager.GetMap(mousePos.MapId), mousePos, Xform, EntityManager);
         }
 
         // Heavy attack.
@@ -152,7 +155,7 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         if (!weapon.DisableClick &&
             (!weapon.SwapKeys ? useDown : altDown))
         {
-            var attackerPos = TransformSystem.GetMapCoordinates(entity);
+            var attackerPos = Xform.GetMapCoordinates(entity);
 
             if (mousePos.MapId != attackerPos.MapId ||
                 (attackerPos.Position - mousePos.Position).Length() > weapon.Range)
@@ -188,13 +191,7 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
     }
 
     protected override bool InRange(EntityUid user, EntityUid target, float range, ICommonSession? session, GameTick? lastRealTick = null)
-    {
-        var xform = Transform(target);
-        var targetCoordinates = xform.Coordinates;
-        var targetLocalAngle = xform.LocalRotation;
-
-        return Interaction.InRangeUnobstructed(user, target, targetCoordinates, targetLocalAngle, range);
-    }
+        => Interaction.InRangeUnobstructed(user, target, range);
 
     protected override void DoDamageEffect(List<EntityUid> targets, EntityUid? user, TransformComponent targetXform)
     {
@@ -244,12 +241,12 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
             return;
         }
 
-        var targetMap = coordinates.ToMap(EntityManager, TransformSystem);
+        var targetMap = coordinates.ToMap(EntityManager, Xform);
 
         if (targetMap.MapId != userXform.MapID)
             return;
 
-        var userPos = TransformSystem.GetWorldPosition(userXform);
+        var userPos = Xform.GetWorldPosition(userXform);
         var direction = targetMap.Position - userPos;
         // [Changed by MisfitsCrew/Operator] Wide swings use cursor angle with full heavy reach;
         // clamping to cursor distance made hits require hovering the target.
@@ -264,6 +261,71 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         });
     }
 
+    private HashSet<EntityUid> ArcRayCast(Vector2 position, Angle angle, Angle arcWidth, float range, MapId mapId, EntityUid ignore)
+    {
+        // TODO: This is pretty sucky.
+        var widthRad = arcWidth;
+        var increments = 1 + 35 * (int) Math.Ceiling(widthRad / (2 * Math.PI));
+        var increment = widthRad / increments;
+        var baseAngle = angle - widthRad / 2;
+        var extraIgnored = GetUserExtraIgnoredEntity(ignore);
+
+        var resSet = new HashSet<EntityUid>();
+
+        for (var i = 0; i < increments; i++)
+        {
+            var castAngle = new Angle(baseAngle + increment * i);
+            // [Changed by MisfitsCrew/Operator] Ignore both the attacker and their mounted vehicle
+            // so rider wide swings do not select the bike as the first arc hit.
+            var res = _physics.IntersectRayWithPredicate(mapId,
+                new CollisionRay(position,
+                    castAngle.ToWorldVec(),
+                    AttackMask),
+                (User: ignore, Extra: extraIgnored),
+                static (hit, ignored) => hit == ignored.User || hit == ignored.Extra,
+                range,
+                false)
+                .ToList();
+
+            if (res.Count != 0)
+                res.ForEach(x => resSet.Add(x.HitEntity));
+        }
+
+        AddArcBoundsCandidates(resSet, position, angle, arcWidth, range, mapId, ignore, extraIgnored);
+
+        return resSet;
+    }
+
+    private void AddArcBoundsCandidates(
+        HashSet<EntityUid> result,
+        Vector2 position,
+        Angle angle,
+        Angle arcWidth,
+        float range,
+        MapId mapId,
+        EntityUid ignore,
+        EntityUid? extraIgnored)
+    {
+        // [Changed by MisfitsCrew/Operator] Add physical edge-overlap candidates during
+        // client prediction too, so edge wide swings do not damage without local feedback.
+        var bounds = Box2.CenteredAround(position, new Vector2(range * 2f, range * 2f));
+        var candidates = _lookup.GetEntitiesIntersecting(mapId, bounds, LookupFlags.Dynamic);
+
+        foreach (var candidate in candidates)
+        {
+            if (result.Contains(candidate) ||
+                candidate == ignore ||
+                candidate == extraIgnored ||
+                !HasComp<DamageableComponent>(candidate) ||
+                !TryComp(candidate, out TransformComponent? xform))
+            {
+                continue;
+            }
+
+            if (TargetBoundsOverlapArc(candidate, xform.Coordinates, xform.LocalRotation, position, angle, arcWidth, range))
+                result.Add(candidate);
+        }
+    }
     private void OnMeleeLunge(MeleeLungeEvent ev)
     {
         var ent = GetEntity(ev.Entity);

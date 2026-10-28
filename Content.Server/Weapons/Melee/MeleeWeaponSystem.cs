@@ -33,6 +33,8 @@ using Robust.Shared.Utility;
 using System.Linq;
 using System.Numerics;
 using Content.Shared.Chat;
+using Content.Shared.Interaction;
+
 
 namespace Content.Server.Weapons.Melee;
 
@@ -90,168 +92,9 @@ public sealed class MeleeWeaponSystem : SharedMeleeWeaponSystem
         }
     }
 
-    protected override bool ArcRaySuccessful(EntityUid targetUid, Vector2 position, Angle angle, Angle arcWidth, float range, MapId mapId,
-        EntityUid ignore, ICommonSession? session, GameTick? lastRealTick = null)
-    {
-        // Originally the client didn't predict damage effects so you'd intuit some level of how far
-        // in the future you'd need to predict, but then there was a lot of complaining like "why would you add artifical delay" as if ping is a choice.
-        // Now damage effects are predicted but for wide attacks it differs significantly from client and server so your game could be lying to you on hits.
-        // This isn't fair in the slightest because it makes ping a huge advantage and this would be a hidden system.
-        // Now the client tells us what they hit and we validate if it's plausible.
 
-        // Even if the client is sending entities they shouldn't be able to hit:
-        // A) Wide-damage is split anyway
-        // B) We run the same validation we do for click attacks.
 
-        EntityCoordinates targetCoords;
-        Angle targetLocalAngle;
 
-        if (session != null)
-        {
-            (targetCoords, targetLocalAngle) = lastRealTick is { } tick
-                ? _lag.GetCoordinatesAngle(targetUid, tick - 1)
-                : _lag.GetCoordinatesAngle(targetUid, session);
-            if (!Interaction.InRangeUnobstructed(ignore, targetUid, targetCoords, targetLocalAngle, range + WideArcTolerance))
-                return false;
-        }
-        else
-        {
-            var xform = Transform(targetUid);
-            targetCoords = xform.Coordinates;
-            targetLocalAngle = xform.LocalRotation;
-            if (!Interaction.InRangeUnobstructed(ignore, targetUid, range + WideArcTolerance))
-                return false;
-        }
-
-        var targetMapPos = TransformSystem.ToMapCoordinates(targetCoords);
-        if (targetMapPos.MapId == mapId)
-        {
-            var toTarget = targetMapPos.Position - position;
-            if (toTarget.LengthSquared() > 0.001f)
-            {
-                var diff = Angle.ShortestDistance(angle, toTarget.ToWorldAngle());
-                if (Math.Abs((double) diff) > (double) arcWidth / 2.0 + WideArcTolerance &&
-                    !TargetBoundsOverlapArc(targetUid, targetCoords, targetLocalAngle, position, angle, arcWidth, range + WideArcTolerance))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private bool TargetBoundsOverlapArc(
-        EntityUid targetUid,
-        EntityCoordinates targetCoords,
-        Angle targetLocalAngle,
-        Vector2 origin,
-        Angle angle,
-        Angle arcWidth,
-        float range)
-    {
-        if (!TryComp<FixturesComponent>(targetUid, out var fixtures))
-            return false;
-
-        var targetMap = _transform.ToMapCoordinates(targetCoords);
-        if (targetMap.MapId == MapId.Nullspace)
-            return false;
-
-        var worldAngle = _transform.GetWorldRotation(targetCoords.EntityId) + targetLocalAngle;
-        var transform = new Transform(targetMap.Position, worldAngle);
-        var initialized = false;
-        var bounds = new Box2(targetMap.Position, targetMap.Position);
-
-        foreach (var fixture in fixtures.Fixtures.Values)
-        {
-            if (!fixture.Hard ||
-                (fixture.CollisionLayer & (int) (CollisionGroup.MobMask | CollisionGroup.Opaque)) == 0)
-            {
-                continue;
-            }
-
-            for (var i = 0; i < fixture.Shape.ChildCount; i++)
-            {
-                var aabb = fixture.Shape.ComputeAABB(transform, i);
-                bounds = initialized ? bounds.Union(aabb) : aabb;
-                initialized = true;
-            }
-        }
-
-        if (!initialized)
-            return false;
-
-        // [Changed by MisfitsCrew/Operator] Center-point arc checks reject edge hits on wide
-        // swings; accept when the target's physical bounds overlap the validated swing sector.
-        var halfArc = arcWidth / 2.0 + WideArcTolerance;
-        foreach (var point in GetBoxTestPoints(bounds, origin))
-        {
-            if (PointInArc(point, origin, angle, halfArc, range))
-                return true;
-        }
-
-        var centerEnd = origin + angle.ToWorldVec() * range;
-        var leftEnd = origin + new Angle(angle - arcWidth / 2.0).ToWorldVec() * range;
-        var rightEnd = origin + new Angle(angle + arcWidth / 2.0).ToWorldVec() * range;
-        return SegmentIntersectsBox(origin, centerEnd, bounds) ||
-               SegmentIntersectsBox(origin, leftEnd, bounds) ||
-               SegmentIntersectsBox(origin, rightEnd, bounds);
-    }
-
-    private static IEnumerable<Vector2> GetBoxTestPoints(Box2 bounds, Vector2 origin)
-    {
-        yield return bounds.BottomLeft;
-        yield return bounds.BottomRight;
-        yield return bounds.TopLeft;
-        yield return bounds.TopRight;
-        yield return new Vector2(
-            Math.Clamp(origin.X, bounds.Left, bounds.Right),
-            Math.Clamp(origin.Y, bounds.Bottom, bounds.Top));
-    }
-
-    private static bool PointInArc(Vector2 point, Vector2 origin, Angle angle, Angle halfArc, float range)
-    {
-        var delta = point - origin;
-        if (delta.LengthSquared() > range * range || delta.LengthSquared() <= 0.001f)
-            return false;
-
-        return Math.Abs((double) Angle.ShortestDistance(angle, delta.ToWorldAngle())) <= (double) halfArc;
-    }
-
-    private static bool SegmentIntersectsBox(Vector2 start, Vector2 end, Box2 box)
-    {
-        if (box.Contains(start))
-            return true;
-
-        var direction = end - start;
-        var min = 0f;
-        var max = 1f;
-
-        if (!ClipAxis(start.X, direction.X, box.Left, box.Right, ref min, ref max) ||
-            !ClipAxis(start.Y, direction.Y, box.Bottom, box.Top, ref min, ref max))
-        {
-            return false;
-        }
-
-        return max >= min;
-    }
-
-    private static bool ClipAxis(float start, float direction, float minBound, float maxBound, ref float min, ref float max)
-    {
-        if (Math.Abs(direction) < 0.0001f)
-            return start >= minBound && start <= maxBound;
-
-        var inv = 1f / direction;
-        var enter = (minBound - start) * inv;
-        var exit = (maxBound - start) * inv;
-
-        if (enter > exit)
-            (enter, exit) = (exit, enter);
-
-        min = Math.Max(min, enter);
-        max = Math.Min(max, exit);
-        return max >= min;
-    }
 
     protected override void AddHeavyAttackCandidates(
         List<EntityUid> entities,
@@ -378,18 +221,7 @@ public sealed class MeleeWeaponSystem : SharedMeleeWeaponSystem
 
     protected override bool InRange(EntityUid user, EntityUid target, float range, ICommonSession? session, GameTick? lastRealTick = null)
     {
-        EntityCoordinates targetCoordinates;
-        Angle targetLocalAngle;
-
-        if (session is { } pSession)
-        {
-            (targetCoordinates, targetLocalAngle) = lastRealTick is { } tick
-                ? _lag.GetCoordinatesAngle(target, tick - 1)
-                : _lag.GetCoordinatesAngle(target, pSession);
-            return Interaction.InRangeUnobstructed(user, target, targetCoordinates, targetLocalAngle, range);
-        }
-
-        return Interaction.InRangeUnobstructed(user, target, range);
+        return AttackInRange(target,range,user,session, out _, out _, lastRealTick);
     }
 
     protected override void DoDamageEffect(List<EntityUid> targets, EntityUid? user, TransformComponent targetXform)
