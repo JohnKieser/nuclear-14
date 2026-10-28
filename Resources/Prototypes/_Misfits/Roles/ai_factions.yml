@@ -1,3 +1,31 @@
+- type: npcFaction
+  id: WaveMob
+  hostile:
+  - HatedBuilding
+  - Wastelander
+  - BrotherhoodOfSteel
+  - BrotherhoodOfSteelSecureArea
+  - CaravanCompany
+  - CaravanCompanySecureArea
+  - NCR
+  - NCRSecureArea # I wouldnt wanna mess with NCR Secure area faction!!!
+  - Rangers
+  - Townsfolk
+  - TownsfolkSecureArea
+  - Tribal
+  - TribalSecureArea
+  - Vault
+  - VaultSecureArea
+  - Enclave
+  - EnclaveSecureArea
+  - CaesarLegion
+
+- type: npcFaction
+  id: HatedBuilding
+  hostile:
+  - WaveMob
+
+
 # #Misfits Change - Old split BoS AI factions commented out.
 # Consolidated to BrotherhoodOfSteel.
 

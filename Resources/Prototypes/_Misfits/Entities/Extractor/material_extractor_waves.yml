@@ -8,16 +8,9 @@
   id: N14MobMaterialExtractorWaveBase
   parent: N14MobWaveAnimal
   components:
-  # Wave mobs first close on the extractor itself. Once they arrive, their
-  # normal hostile HTN can select and attack nearby players.
   - type: HTN
     rootTask:
       task: N14MaterialExtractorWaveCompound_melee
-  - type: NpcFactionMember
-    factions:
-    - WastelandAnimal
-    friendlyFactions:
-    - SimpleNeutral
 
 - type: entity
   abstract: true

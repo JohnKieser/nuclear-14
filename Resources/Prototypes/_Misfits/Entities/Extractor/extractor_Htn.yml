@@ -13,6 +13,14 @@
       preset: TargetHealth
 
 - type: utilityQuery
+  id: PriorityTargetService
+  limit: 1
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: PriorityTarget
+
+- type: utilityQuery
   id: NearbyGunTargets_Xray
   query:
   - !type:NearbyHostilesQuery
@@ -35,23 +43,56 @@
   - tasks:
     - !type:HTNCompoundTask
       task: N14RangedCombatCompound
+    preconditions:
+    - !type:CoordinatesInRangePrecondition
+      targetKey: PriorityTarget
+      rangeKey: PriorityTargetRangeMax
   - tasks:
     - !type:HTNCompoundTask
       task: N14MaterialExtractorWaveCompound_melee
 
 - type: htnCompound
-  id: N14MaterialExtractorWaveCompound_melee
+  id: N14MaterialExtractorWaveCompound_SeekPriorityTarget
   branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:NoOperator
+      services:
+      - !type:UtilityService
+        id: PriorityTarget
+        proto: PriorityTargetService
+        key: PriorityTarget
+    preconditions:
+    - !type:KeyNotExistsPrecondition
+      key: PriorityTarget
+
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:MoveToOperator
         pathfindInPlanning: true
-        targetKey: FollowTarget
-        rangeKey: MeleeRange
+        targetKey: PriorityTarget
+        rangeKey: PriorityTargetReturnDist
         removeKeyOnFinish: false
+    preconditions:
+    - !type:KeyExistsPrecondition
+      key: PriorityTarget
+    - !type:CoordinatesNotInRangePrecondition
+      targetKey: PriorityTarget
+      rangeKey: PriorityTargetRangeMax
+
+- type: htnCompound
+  id: N14MaterialExtractorWaveCompound_melee
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: N14MaterialExtractorWaveCompound_SeekPriorityTarget
   - tasks:
     - !type:HTNCompoundTask
       task: N14MeleeCombatCompound_Xray
+    preconditions:
+    - !type:CoordinatesInRangePrecondition
+      targetKey: PriorityTarget
+      rangeKey: PriorityTargetRangeMax
 
 - type: htnCompound
   id: N14MeleeCombatCompound_Xray

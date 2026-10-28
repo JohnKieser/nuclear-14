@@ -1,6 +1,7 @@
 - type: entity
   parent: N14MachineWaterTreatmentBroken
   id: N14SeismicMaterialExtractor
+  suffix: MobWaveTarget
   name: seismic material extractor
   description: A battered pre-war drill that hammers the ground for usable raw materials. Its racket draws unwanted attention.
   components:
@@ -14,19 +15,24 @@
     radius: 3
     energy: 2
   - type: MaterialExtractorLandmark
+  - type: Explosive
+    explosionType: MisfitsExtractorExplosion
+    maxIntensity: 25000
+    intensitySlope: 5
+    totalIntensity: 25000
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallic
+  - type: ExplosionResistance
+    damageCoefficient: 0.0
   - type: Destructible
     thresholds:
     - trigger:
         !type:DamageTrigger
         damage: 150
       behaviors:
-      - !type:SpawnEntitiesBehavior
-        spawn:
-          N14SeismicMaterialExtractorBroken:
-            min: 1
-            max: 1
-      - !type:DoActsBehavior
-        acts: ["Destruction"]
+      - !type:SolutionExplosionBehavior
+        solution: tank
   # Balance: all economic and encounter tuning is kept here.
   - type: MaterialExtractor
     operatorRadius: 4
@@ -116,6 +122,10 @@
   - type: Tag
     tags:
     - Structure
+  - type: NpcFactionMember
+    factions:
+    - HatedBuilding
+  - type: PriorityTarget
 
 - type: entity
   parent: N14MachineWaterTreatmentBroken

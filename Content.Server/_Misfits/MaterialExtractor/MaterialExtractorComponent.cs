@@ -1,8 +1,5 @@
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared._Misfits.Expeditions;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Content.Server._Misfits.MaterialExtractor;
 

@@ -468,7 +468,7 @@
 # Wave Defence Base Hostile
 #MARK: WAVE
 - type: entity
-  name: wave attacker
+#  name: wave attacker
   abstract: true
   id: N14MobWave
   components:
@@ -495,6 +495,12 @@
         10000.0
       MeleeRange: !type:Single
         1.5
+      PriorityTargetRangeMax: !type:Single
+        20.0
+      PriorityTargetRangeMin: !type:Single
+        10.0
+      PriorityTargetReturnDist: !type:Single
+        10.0
   - type: WaveMob
     difficulty: 1
   - type: GhostTakeoverAvailable
@@ -504,6 +510,11 @@
     name: hostile wildlife # wave defence
     description: |
       Smash, break, kill!
+  - type: NpcFactionMember
+    factions:
+    - WaveMob
+    hostileFactions:
+    - HatedBuilding
 
 - type: entity
   abstract: true
@@ -512,6 +523,7 @@
   components:
   - type: WaveMob
     group: Animals
+
 
 - type: entity
   abstract: true

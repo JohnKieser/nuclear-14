@@ -213,10 +213,11 @@ public sealed partial class NpcFactionSystem : EntitySystem
         return GetNearbyFactions(ent, range, ent.Comp.FriendlyFactions);
     }
 
+    private const LookupFlags NPCLookup = LookupFlags.All | LookupFlags.Approximate;
     private IEnumerable<EntityUid> GetNearbyFactions(EntityUid entity, float range, HashSet<ProtoId<NpcFactionPrototype>> factions)
     {
         var xform = Transform(entity);
-        foreach (var ent in _lookup.GetEntitiesInRange<NpcFactionMemberComponent>(_xform.GetMapCoordinates((entity, xform)), range))
+        foreach (var ent in _lookup.GetEntitiesInRange<NpcFactionMemberComponent>(_xform.GetMapCoordinates((entity, xform)), range,NPCLookup))
         {
             if (ent.Owner == entity)
                 continue;
