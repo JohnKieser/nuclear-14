@@ -487,20 +487,20 @@
         true
       NavSmash: !type:Bool
         true
-      ESP: !type:Bool
-        true
+#      ESP: !type:Bool
+#        true
       VisionRadius: !type:Single
-        1000.0
+        40.0
       AggroVisionRadius: !type:Single
-        10000.0
+        40.0
       MeleeRange: !type:Single
         1.5
       PriorityTargetRangeMax: !type:Single
-        20.0
+        30.0
       PriorityTargetRangeMin: !type:Single
         10.0
       PriorityTargetReturnDist: !type:Single
-        10.0
+        15.0
   - type: WaveMob
     difficulty: 1
   - type: GhostTakeoverAvailable

@@ -19,15 +19,12 @@ public sealed partial class MaterialExtractorComponent : Component
         ["N14BauxiteOre1"] = 5,
         ["FertilizerOre1"] = 3,
     };
-    [DataField] public int OperatorRadius = 4;
-    [DataField] public int PulseIntervalSeconds = 2;
-    [DataField] public int FirstWaveMinSeconds = 30;
-    [DataField] public int FirstWaveMaxSeconds = 30;
-    [DataField] public int WaveMinSeconds = 30;
-    [DataField] public int WaveMaxSeconds = 30;
-    [DataField] public int WaveWarningSeconds;
+    [DataField] public float PulseIntervalSeconds = 2f;
+    [DataField] public float WaveMinSeconds = 30;
+    [DataField] public float WaveMaxSeconds = 30;
+    [DataField] public float WaveWarningSeconds = 0;
     [DataField] public int WaveMinMobCount = 1;
-    [DataField] public int WaveMaxMobCount = 3;
+    [DataField] public int MaxMobWaveCount = 200;
     [DataField] public float WaveSpawnMinDistance = 16f;
     [DataField] public float WaveSpawnMaxDistance = 28f;
     [DataField] public int WaveSpawnAttempts = 40;
@@ -60,16 +57,17 @@ public sealed partial class MaterialExtractorComponent : Component
     [DataField] public float RichDepositChance = 0.15f;
     [DataField] public float PoorYieldMultiplier = 0.7f;
     [DataField] public float RichYieldMultiplier = 1.4f;
-    [DataField] public float LowFuelWarningFraction = 0.25f;
+    [DataField] public float LowFuelWarningThreshold = 0.25f;
     [DataField] public string FuelSolution = "tank";
     [DataField] public ProtoId<ReagentPrototype> FuelReagent = "WeldingFuel";
+
+
     [ViewVariables(VVAccess.ReadOnly)]
     public ProtoId<MobWaveThemePrototype> CurWaveTheme = "MobWave_WildLife";
-    public TimeSpan NextPulse;
+    public uint NextPulse;
     [ViewVariables(VVAccess.ReadOnly)]
-    public TimeSpan NextWave;
-    [ViewVariables(VVAccess.ReadOnly)]
-    public TimeSpan DamagePauseUntil;
+    public uint NextWave;
+
     public bool BeaconOn;
     public bool WarningSent;
     public bool LowFuelWarningIssued;

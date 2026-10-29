@@ -20,6 +20,7 @@ using Content.Shared.Storage;
 using Content.Shared.Spawning;
 using Content.Shared.Chat;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.FixedPoint;
 using Content.Shared.Maps;
 using Content.Shared.Physics;
 using Content.Shared.Random.Helpers;
@@ -75,7 +76,6 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
     {
         UpdatesAfter.Add(typeof(GeneratorSystem));
         SubscribeLocalEvent<MaterialExtractorComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<MaterialExtractorComponent, DamageChangedEvent>(OnDamageChanged);
         SubscribeLocalEvent<MaterialExtractorComponent, ExaminedEvent>(OnExamined);
         SubscribeLocalEvent<MaterialExtractorComponent, MaterialExtractorStartMessage>(OnStartMessage);
         SubscribeLocalEvent<MaterialExtractorComponent, MaterialExtractorStopMessage>(OnStopMessage);
@@ -103,6 +103,7 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
             || generator.On || _generator.GetFuel(ent) <= 0f || _generator.GetIsClogged(ent))
             return;
 
+        SendLifecycleEmote(ent, "material-extractor-started");
         _generator.SetFuelGeneratorOn(ent, true, generator);
     }
 
@@ -117,11 +118,6 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         _generator.EmptyGenerator(ent);
     }
 
-    private void OnDamageChanged(Entity<MaterialExtractorComponent> ent, ref DamageChangedEvent args)
-    {
-        ent.Comp.DamagePauseUntil = _timing.CurTime + TimeSpan.FromSeconds(30);
-        SetBeacon(ent.Owner, ent.Comp, true);
-    }
 
     private void OnExamined(Entity<MaterialExtractorComponent> ent, ref ExaminedEvent args)
     {
@@ -147,79 +143,65 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         _lights.SetEnabled(ent.Owner, false);
     }
 
+    private void PopupMessages(EntityUid uid, MaterialExtractorComponent extractor, bool running)
+    {
+        if (running)
+        {
+            LowFuelMsgToggle(uid, extractor);
+            return;
+        }
+
+        var fuelExhausted = _generator.GetFuel(uid) <= 0f;
+        SendLifecycleEmote(uid, fuelExhausted
+            ? "material-extractor-fuel-depleted"
+            : "material-extractor-stopped");
+
+    }
+
+
+    private void UpdateExtractorVisuals(EntityUid uid, MaterialExtractorComponent extractor)
+    {
+        var fuelComp = Comp<FuelGeneratorComponent>(uid);
+        //_generator.SetFuelGeneratorOn(uid,fuelComp.On);
+        SetBeacon(uid,extractor, fuelComp.On);
+        UpdateUi(uid,extractor);
+        PopupMessages(uid,extractor, fuelComp.On);
+        if (_timing.CurTick.Value >= extractor.NextPulse)
+            TogglePulseEffect(uid, extractor);
+
+        if (_timing.CurTick.Value+extractor.NextWave*2/3 >= extractor.NextWave)
+            WaveWarningEffect(uid, extractor);
+    }
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
-        var query = EntityQueryEnumerator<MaterialExtractorComponent, StorageComponent>();
-        while (query.MoveNext(out var uid, out var extractor, out var storage))
+        var query = EntityQueryEnumerator<MaterialExtractorComponent>();
+        while (query.MoveNext(out var uid, out var extractor))
         {
-            // This is a self-contained welding-fuel generator. Its normal generator
-            // start/stop state is the extractor's operating switch.
-            if (!TryComp<FuelGeneratorComponent>(uid, out var generator) || !generator.On)
-            {
-                var fuelExhausted = !TryComp<FuelGeneratorComponent>(uid, out _) || _generator.GetFuel(uid) <= 0f;
-                if (extractor.WasRunning)
-                {
-                    SendLifecycleEmote(uid, fuelExhausted
-                        ? "material-extractor-fuel-depleted"
-                        : "material-extractor-stopped");
-                }
 
-                extractor.WasRunning = false;
-                SetBeacon(uid, extractor, false);
-                UpdateUi(uid, extractor, false, false, fuelExhausted);
-                continue;
-            }
-
-            // The extractor is not an unattended income source. A living player must
-            // remain close enough to actively work its controls or it shuts itself off.
-            if (!HasNearbyOperator((uid, extractor)))
-            {
-                _generator.SetFuelGeneratorOn(uid, false, generator);
-                if (extractor.WasRunning)
-                    SendLifecycleEmote(uid, "material-extractor-unattended");
-
-                extractor.WasRunning = false;
-                SetBeacon(uid, extractor, false);
-                UpdateUi(uid, extractor, false, true, false);
-                continue;
-            }
-
-            if (!extractor.WasRunning)
-            {
-                extractor.WasRunning = true;
-                SendLifecycleEmote(uid, "material-extractor-started");
-                extractor.WarningSent = false;
-                extractor.NextPulse = _timing.CurTime;
-                extractor.NextWave = _timing.CurTime + TimeSpan.FromSeconds(_random.Next(extractor.FirstWaveMinSeconds, extractor.FirstWaveMaxSeconds + 1));
-            }
-
-            UpdateLowFuelWarning(uid, extractor);
-            UpdateUi(uid, extractor, true, false, false);
+            UpdateExtractorVisuals(uid, extractor);
 
             extractor.ActiveAttackers.RemoveWhere(attacker =>
                 Deleted(attacker) ||
                 TryComp<MobStateComponent>(attacker, out var state) && state.CurrentState == MobState.Dead);
 
-            // A new themed encounter is not scheduled until the previous one is
-            // defeated. This prevents raiders, mutants, and wildlife from being
-            // mixed by overlapping rotations (and prevents their factions from
-            // fighting each other instead of the players).
-            if (extractor.WaveActive && extractor.ActiveAttackers.Count == 0)
+
+
+            if (!extractor.WasRunning)
             {
-                extractor.WaveActive = false;
+                extractor.WasRunning = true;
                 extractor.WarningSent = false;
-                extractor.NextWave = _timing.CurTime + NextWaveDelay(extractor);
+                extractor.NextPulse = _timing.CurTick.Value + (uint)MathF.Floor(_timing.TickRate*extractor.PulseIntervalSeconds);
+
+                var wavMin = (int)MathF.Floor(_timing.TickRate * extractor.WaveMinSeconds);
+                var wavMax = (int)MathF.Floor(_timing.TickRate * extractor.WaveMaxSeconds);
+                var waveInterval = (uint)_random.Next(wavMin, wavMax);
+                extractor.NextWave = _timing.CurTick.Value + waveInterval;
             }
 
-            if (_timing.CurTime < extractor.DamagePauseUntil)
-            {
-                SetBeacon(uid, extractor, true);
-                continue;
-            }
 
             if (!extractor.WaveActive && !extractor.WarningSent &&
-                _timing.CurTime >= extractor.NextWave - TimeSpan.FromSeconds(extractor.WaveWarningSeconds))
+                _timing.CurTick.Value >= extractor.NextWave - (uint) MathF.Round(_timing.TickRate*extractor.WaveWarningSeconds))
             {
                 extractor.WarningSent = true;
                 SetBeacon(uid, extractor, true);
@@ -227,29 +209,38 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
                     AudioParams.Default.WithVolume(-3f).WithMaxDistance(30f));
             }
 
-            if (_timing.CurTime >= extractor.NextWave)
+            if (_timing.CurTick.Value >= extractor.NextWave)
                 StartWave(uid, extractor);
 
-            if (_timing.CurTime >= extractor.NextPulse)
-            {
-                SetBeacon(uid, extractor, !extractor.BeaconOn);
-                _audio.PlayPvs(ThumpSound, uid,
-                    AudioParams.Default.WithVolume(-7f).WithMaxDistance(22f));
-                ProduceOutput(uid, extractor, storage);
-                extractor.NextPulse = _timing.CurTime + PulseDelay(extractor);
-            }
         }
     }
 
-    private void UpdateUi(EntityUid uid, MaterialExtractorComponent extractor, bool running, bool unattended, bool fuelDepleted)
+    private void WaveWarningEffect(EntityUid uid,MaterialExtractorComponent comp)
     {
-        if (!_ui.IsUiOpen(uid, MaterialExtractorUiKey.Key))
-            return;
+        _audio.PlayPvs(ThumpSound, uid,
+            AudioParams.Default.WithVolume(-3f).WithMaxDistance(30f));
 
-        var fuel = TryComp<FuelGeneratorComponent>(uid, out _) ? _generator.GetFuel(uid) : 0f;
+    }
+    private void TogglePulseEffect(EntityUid uid,MaterialExtractorComponent comp)
+    {
+        SetBeacon(uid, comp, !comp.BeaconOn);
+        _audio.PlayPvs(ThumpSound, uid,
+            AudioParams.Default.WithVolume(-7f).WithMaxDistance(22f));
+
+        var secondsToTicks = (uint) MathF.Round(_timing.TickRate*comp.PulseIntervalSeconds);
+        comp.NextPulse = _timing.CurTick.Value + secondsToTicks;
+    }
+    private void UpdateUi(EntityUid uid, MaterialExtractorComponent extractor)
+    {
+        if (!_ui.IsUiOpen(uid, MaterialExtractorUiKey.Key) || !TryComp<FuelGeneratorComponent>(uid, out var fuelComp))
+            return;
+        var running = fuelComp.On;
+        var fuel = _generator.GetFuel(uid);
         var capacity = 0f;
+        var fuelDepleted = fuel <= 0f;
         if (_solution.TryGetSolution(uid, extractor.FuelSolution, out _, out var tank))
             capacity = tank.MaxVolume.Float();
+
 
         _ui.SetUiState(uid, MaterialExtractorUiKey.Key,
             new MaterialExtractorUiState
@@ -257,7 +248,7 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
                 Running = running,
                 Fuel = fuel,
                 FuelCapacity = capacity,
-                Unattended = unattended,
+                // Unattended = unattended,
                 FuelDepleted = fuelDepleted,
             });
     }
@@ -267,8 +258,10 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         _chat.SendAreaEmote(uid, Loc.GetString(localizationId), LifecycleEmoteRange);
     }
 
-    private void ProduceOutput(EntityUid extractorUid, MaterialExtractorComponent extractor, StorageComponent storage)
+    private void ExtractorReward(EntityUid extractorUid, MaterialExtractorComponent extractor)
     {
+        var rewardSize = extractor.ConsecutiveWaves*10;
+
         var output = Spawn(SelectOutput(extractor), Transform(extractorUid).Coordinates);
         if (_storage.Insert(extractorUid, output, out _, storageComp: storage, playSound: false))
             return;
@@ -277,32 +270,28 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         SetBeacon(extractorUid, extractor, true);
     }
 
-    private void UpdateLowFuelWarning(EntityUid uid, MaterialExtractorComponent extractor)
+    private void LowFuelMsgToggle(EntityUid uid, MaterialExtractorComponent extractor)
     {
-        if (!_solution.TryGetSolution(uid, extractor.FuelSolution, out _, out var fuelTank) || fuelTank.MaxVolume <= 0)
+        if (!_solution.TryGetSolution(uid, extractor.FuelSolution, out _, out var fuelTank))
             return;
+        //misfits removed: least ai generated line of code.
+        //var fraction = fuelTank.GetTotalPrototypeQuantity(extractor.FuelReagent).Float() / fuelTank.MaxVolume.Float();
 
-        var fraction = fuelTank.GetTotalPrototypeQuantity(extractor.FuelReagent).Float() / fuelTank.MaxVolume.Float();
-        if (fraction > extractor.LowFuelWarningFraction)
+        if (fuelTank.FillFraction <= extractor.LowFuelWarningThreshold && !extractor.LowFuelWarningIssued)
         {
-            extractor.LowFuelWarningIssued = false;
+            extractor.LowFuelWarningIssued = true;
+            _chat.TrySendInGameICMessage(uid,
+                Loc.GetString("material-extractor-low-fuel", ("percent", $"Value: {fuelTank.FillFraction:P2}.")),
+                InGameICChatType.Emote,
+                ChatTransmitRange.Normal,
+                ignoreActionBlocker: true);
             return;
         }
 
-        if (extractor.LowFuelWarningIssued)
-            return;
+        extractor.LowFuelWarningIssued = fuelTank.FillFraction > extractor.LowFuelWarningThreshold;
 
-        extractor.LowFuelWarningIssued = true;
-        _chat.TrySendInGameICMessage(uid,
-            Loc.GetString("material-extractor-low-fuel", ("percent", MathF.Round(fraction * 100f))),
-            InGameICChatType.Emote,
-            ChatTransmitRange.Normal,
-            ignoreActionBlocker: true);
-        SetBeacon(uid, extractor, true);
     }
 
-    private static TimeSpan PulseDelay(MaterialExtractorComponent extractor)
-        => TimeSpan.FromSeconds(extractor.PulseIntervalSeconds / extractor.YieldMultiplier);
 
     private string SelectOutput(MaterialExtractorComponent extractor)
     {
@@ -326,28 +315,13 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         return fallback!;
     }
 
-    private bool HasNearbyOperator(Entity<MaterialExtractorComponent> extractor)
-    {
-        var origin = Transform(extractor);
-        var originPosition = _transform.GetWorldPosition(extractor);
-        var query = EntityQueryEnumerator<ActorComponent, MobStateComponent, TransformComponent>();
-        while (query.MoveNext(out var playerUid, out _, out var mobState, out var player))
-        {
-            if (mobState.CurrentState == MobState.Alive
-                && player.MapID == origin.MapID
-                && Vector2.DistanceSquared(_transform.GetWorldPosition(playerUid), originPosition) <= extractor.Comp.OperatorRadius * extractor.Comp.OperatorRadius)
-                return true;
-        }
-
-        return false;
-    }
 
     private void StartWave(EntityUid extractorUid, MaterialExtractorComponent extractor)
     {
         if (extractor.ConsecutiveWaves != 0 && extractor.ConsecutiveWaves % 5 == 0 &&
             extractor.ActiveAttackers.Count > 0)
         {
-            extractor.NextWave = _timing.CurTime + TimeSpan.FromSeconds(10);
+            extractor.NextWave = _timing.CurTick.Value + 300; // 10 seconds
             return;
         }
 
@@ -370,10 +344,15 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
 
         extractor.WavesStartedTotal++;
         extractor.ConsecutiveWaves++;
+        // maybe this can be like cost instead where each unit is worth a certain value
+        // and the base scale increasing also decides the weights of each unit
+        // like in rimworld
+        var themeMult = Math.Max((theme.MinCount + theme.MaxCount)/2,1);
+        var playerMult = 3 * Math.Log2(.2f * extractor.Participants - 1) + 1;
+        var baseScale = 5 * Math.Log2(.2f * extractor.ConsecutiveWaves - 1) + 1;
+        var scaling = themeMult*playerMult*baseScale;
 
-        var themeScale = (theme.MinCount / theme.MaxCount)*extractor.ConsecutiveWaves + 1;
-
-        var count = _random.Next(extractor.WaveMinMobCount, extractor.WaveMaxMobCount + 1)*themeScale*extractor.Participants;
+        var count = (int)Math.Floor(_random.NextDouble(1f,1.25f)*scaling);
         // we spawn a base mob as position reference to spawn all the other mobs with SpawnNextToOrDrop()
         var baseMob = EntityManager.SpawnAtPosition(_random.Pick(theme.Mobs), spawnCoordinates);
         // ai set for all mobs
@@ -391,14 +370,14 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
             _random.Prob(extractor.BossWaveChance);
         if (bossWave)
         {
-            var bossScale = (int)(themeScale / 5f) * extractor.BossWaveMinNumber;
+            var bossScale = (int)(scaling / 5f) * extractor.BossWaveMinNumber;
             var bossCount = Math.Max(bossScale,1);
             SpawnMobWave(extractorUid, baseMob, extractor, theme, bossCount, bossWave);
         }
 
-        extractor.NextWave = _timing.CurTime + TimeSpan.FromSeconds(extractor.WaveMinSeconds);
-        extractor.WarningSent = false;
-        SetBeacon(extractorUid, extractor, true);
+        extractor.NextWave = _timing.CurTick.Value + (uint) MathF.Round(_timing.TickRate*extractor.WaveMinSeconds);
+        // extractor.WarningSent = false;
+        // SetBeacon(extractorUid, extractor, true);
     }
 
     private void SpawnMobWave(EntityUid extractorUid, EntityUid baseMob, MaterialExtractorComponent extractor, MobWaveThemePrototype themePrototype, int count, bool bossWave = false)
@@ -426,8 +405,6 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
             _htn.Replan(htn);
         }
     }
-    private TimeSpan NextWaveDelay(MaterialExtractorComponent extractor)
-        => TimeSpan.FromSeconds(_random.Next(extractor.WaveMinSeconds, extractor.WaveMaxSeconds + 1));
 
     private MobWaveThemePrototype SelectWaveTheme(EntityUid extractorUid, MaterialExtractorComponent extractor)
     {
@@ -461,22 +438,6 @@ public sealed partial class MaterialExtractorSystem : EntitySystem
         return cycleTime >= extractor.NightStart && cycleTime < extractor.NightEnd;
     }
 
-    private int CountEncounterPlayers(EntityUid extractorUid, float radius)
-    {
-        var extractorTransform = Transform(extractorUid);
-        var origin = _transform.GetWorldPosition(extractorUid);
-        var radiusSquared = radius * radius;
-        var count = 0;
-        var query = EntityQueryEnumerator<ActorComponent, MobStateComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out _, out var mobState, out var transform))
-        {
-            if (mobState.CurrentState == MobState.Alive && transform.MapID == extractorTransform.MapID &&
-                Vector2.DistanceSquared(_transform.GetWorldPosition(uid), origin) <= radiusSquared)
-                count++;
-        }
-
-        return Math.Max(count, 1);
-    }
 
     private static ExpeditionMobFamily GetBossFamily(ExpeditionMobFamily themeFamily, string prototype)
     {

@@ -23,6 +23,6 @@ public sealed class MaterialExtractorUiState : BoundUserInterfaceState
     public bool Running;
     public float Fuel;
     public float FuelCapacity;
-    public bool Unattended;
+    // public bool Unattended;
     public bool FuelDepleted;
 }

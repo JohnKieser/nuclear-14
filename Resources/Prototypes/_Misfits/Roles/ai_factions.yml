@@ -56,6 +56,7 @@
   - Feral
   - SuperMutant
   - Zetan
+  - WaveMob
 
 # #Misfits Add - Player SentryBot faction. Allied with HostileRobot so NPC robots treat
 # player SentryBots as allies (protect them, won't aggro) rather than neutral bystanders.
@@ -160,6 +161,7 @@
   - HostileRobot
   - Enclave
   - Feral
+  - WaveMob
 
 - type: npcFaction
   id: BrotherhoodOfSteelSecureArea
@@ -189,6 +191,7 @@
   - EnclaveSecureArea
   - Feral
   - SuperMutant
+  - WaveMob
 
 #MARK: Enclave
 # #Misfits Add - Enclave remnant faction for player jobs and future map-side automation.
@@ -208,6 +211,7 @@
   - Raider
   - HostileRobot
   - Feral
+  - WaveMob
 
 - type: npcFaction
   id: EnclaveSecureArea
@@ -237,6 +241,7 @@
   - Feral
   - CaesarLegion
   - SuperMutant
+  - WaveMob
 
 # #Misfits Add - Followers of the Apocalypse player faction.
 # Used by BuildFactionFilter to target death-alert chat messages at Followers players.

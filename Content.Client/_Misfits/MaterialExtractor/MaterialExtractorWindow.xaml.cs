@@ -24,9 +24,9 @@ public sealed partial class MaterialExtractorWindow : FancyWindow
     {
         StatusLabel.Text = state.Running ? "Running" : "Stopped";
         StatusLabel.SetOnlyStyleClass(state.Running ? "Good" : "Danger");
-        DetailLabel.Text = state.Unattended
-            ? "Requires an operator within 4 tiles"
-            : state.FuelDepleted ? "Fuel depleted" : "Ready to extract materials";
+        // DetailLabel.Text = state.Unattended
+        //     ? "Requires an operator within 4 tiles"
+        //     : state.FuelDepleted ? "Fuel depleted" : "Ready to extract materials";
         FuelBar.Value = state.FuelCapacity > 0 ? state.Fuel / state.FuelCapacity : 0;
         FuelLabel.Text = $"Fuel: {(int) MathF.Floor(state.Fuel)}";
         StartButton.Visible = !state.Running;
