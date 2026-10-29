@@ -91,8 +91,8 @@ public sealed class HTNPlanJob : Job<HTNPlan>
             {
                 case HTNCompoundTask compound:
                     await SuspendIfOutOfTime();
-                    /// look thrugh compound's branches and decomp first valid branch's tasks
-                    if (TryFindSatisfiedMethod(compound, tasksToProcess, _blackboard, ref btrIndex))
+                    // look thrugh compound's branches and decomp first valid branch's tasks
+                    if (TryFindSatisfiedBranch(compound, tasksToProcess, _blackboard, ref btrIndex))
                     {
                         // Need to copy worldstate to roll it back
                         // Don't need to copy taskstoprocess as we can just clear it and set it to the compound task we roll back to.
@@ -147,7 +147,7 @@ public sealed class HTNPlanJob : Job<HTNPlan>
     {
         blackboard.ReadOnly = true;
 
-        /// if one primitive is invalid, we gotta cancel its tasks and goto next branch
+        // if one primitive is invalid, we gotta cancel its tasks and goto next branch
         foreach (var con in primitive.Preconditions)
         {
             if (con.IsMet(blackboard))
@@ -155,14 +155,16 @@ public sealed class HTNPlanJob : Job<HTNPlan>
 
             return false;
         }
-        /// making this a tuple with a "valid" bool seems redundant if we got precons
+        // making this a tuple with a "valid" bool seems redundant if we got precons
+        // TODO: check if in practice we really need a given plan to fail
+        // TODO: and cant just push that responsibility to the next primitive's precons. Maybe precons oughta update blackboard or just have sensors
         var (valid, effects) = await primitive.Operator.Plan(blackboard, Cancellation);
 
         if (!valid)
             return false;
 
         blackboard.ReadOnly = false;
-
+        // TODO: prolly be very useful if updates to blackboard are not only dependent on primitives failing/suceeding(need sensors to update stuff independently)
         if (effects != null)
         {
             foreach (var (key, value) in effects)
@@ -177,12 +179,12 @@ public sealed class HTNPlanJob : Job<HTNPlan>
     }
 
     /// <summary>
-    /// Goes through each compound task branch and tries to find an appropriate one.
+    /// Goes through each branch(often compound tasks) and goes with the first one that suceeds
     /// </summary>
     /// TODO: Maybe fix this up and have early exit due to current MTR cost
     /// TODO: Method = branch
     /// compound just holds branchs
-    private bool TryFindSatisfiedMethod(HTNCompoundTask compoundId, Queue<HTNTask> tasksToProcess, NPCBlackboard blackboard, ref int mtrIndex)
+    private bool TryFindSatisfiedBranch(HTNCompoundTask compoundId, Queue<HTNTask> tasksToProcess, NPCBlackboard blackboard, ref int mtrIndex)
     {
         var compound = _protoManager.Index<HTNCompoundPrototype>(compoundId.Task);
 
@@ -192,7 +194,7 @@ public sealed class HTNPlanJob : Job<HTNPlan>
             var branch = compound.Branches[i];
             var isValid = true;
 
-            /// check each precon in branch
+            // check each precon in branch
             foreach (var con in branch.Preconditions)
             {
                 if (con.IsMet(blackboard))
@@ -204,15 +206,16 @@ public sealed class HTNPlanJob : Job<HTNPlan>
 
             if (!isValid)
                 continue;
-            /// decomp tasks in 1st accepted branch
+            // decomp tasks in 1st accepted branch
             foreach (var task in branch.Tasks)
             {
                 tasksToProcess.Enqueue(task);
             }
-            /// first valid branch only
+            // first valid branch only so exit with true
             return true;
         }
-
+        // a false here often means we go back a level to check the other branches we didnt go thru yet
+        // from experience, no valid branches/tasks at all means the ai if "off" till next update
         return false;
     }
 

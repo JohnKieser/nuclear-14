@@ -2,7 +2,9 @@ using System.Threading;
 using Content.Server.NPC.Components;
 
 namespace Content.Server.NPC.HTN;
-
+/// <summary>
+/// todo
+/// </summary>
 [RegisterComponent]
 public sealed partial class HTNComponent : NPCComponent
 {
@@ -14,6 +16,7 @@ public sealed partial class HTNComponent : NPCComponent
     public HTNCompoundTask RootTask = default!;
 
     /// <summary>
+    /// Services
     /// Check any active services for our current plan. This is used to find new targets for example without changing our plan.
     /// </summary>
     [DataField("checkServices")]

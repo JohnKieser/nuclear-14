@@ -201,6 +201,16 @@
     exponent: 1
     yOffset: 1
     xOffset: 0
+#Misfits added: OG curve was only relavent for distances of 0 to 1 tile.
+#                Scoring still 0 to 1 but across 10 tiles
+#               I wanna change the scoring in the future since this is bound to suffer from floating point error if we want very specifc scoring like in dis case
+- type: utilityCurvePreset
+  id: TargetDistanceExpanded
+  curve: !type:QuadraticCurve
+    slope: -0.3
+    exponent: 0.5
+    yOffset: 1
+    xOffset: 0
 
 - type: utilityCurvePreset
   id: TargetHealth

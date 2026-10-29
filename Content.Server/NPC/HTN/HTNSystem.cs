@@ -291,15 +291,18 @@ public sealed partial class HTNSystem : EntitySystem
         return _loadedQuery.TryGetComponent(chunk, out var loaded) && loaded.Loaders is not null;
     }
     // Corvax-end
-
+/// <summary>
+///
+/// </summary>
+/// <param name="component"> HTN comp that holds</param>
+/// <param name="frameTime"></param>
+/// <exception cref="InvalidOperationException"></exception>
     private void Update(HTNComponent component, float frameTime)
     {
         // We'll still try re-planning occasionally even when we're updating in case new data comes in.
-        /// what? ^^
         if (component.NextPlanTime <= _gameTiming.CurTime)
-        {
             RequestPlan(component);
-        }
+
 
         // Getting a new plan so do nothing.
         if (component.Plan == null)
@@ -453,10 +456,6 @@ public sealed partial class HTNSystem : EntitySystem
     /// </summary>
     /// <param name="component"></param>
     ///
-    /// "Even if running an existing plan"
-    /// yes so we will have a JobPlan running even while we are still
-    /// executing tasks
-    /// TODO: rename to something less misleading
     private void RequestPlan(HTNComponent component)
     {
         /// already planning so dont

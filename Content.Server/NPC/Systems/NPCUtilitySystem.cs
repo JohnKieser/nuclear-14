@@ -23,6 +23,7 @@ using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Whitelist;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.Containers;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
 
@@ -79,10 +80,10 @@ public sealed class NPCUtilitySystem : EntitySystem
     {
         // TODO: PickHostilesop or whatever needs to juse be UtilityQueryOperator
 
-        var weh = _proto.Index<UtilityQueryPrototype>(proto);
+        var queries = _proto.Index<UtilityQueryPrototype>(proto);
         var ents = _entPool.Get();
 
-        foreach (var query in weh.Query)
+        foreach (var query in queries.Query)
         {
             switch (query)
             {
@@ -90,7 +91,7 @@ public sealed class NPCUtilitySystem : EntitySystem
                     Filter(blackboard, ents, filter);
                     break;
                 default:
-                    Add(blackboard, ents, query);
+                    Add(blackboard, ents, query, queries.Limit);
                     break;
             }
         }
@@ -106,26 +107,25 @@ public sealed class NPCUtilitySystem : EntitySystem
 
         foreach (var ent in ents)
         {
-            if (results.Count > weh.Limit)
+            if (results.Count > queries.Limit)
                 break;
 
             var score = 1f;
 
-            foreach (var con in weh.Considerations)
+            foreach (var con in queries.Considerations)
             {
                 var conScore = GetScore(blackboard, ent, con);
                 var curve = con.Curve;
                 var curveScore = GetScore(curve, conScore);
 
-                var adjusted = GetAdjustedScore(curveScore, weh.Considerations.Count);
+                var adjusted = GetAdjustedScore(curveScore, queries.Considerations.Count);
                 score *= adjusted;
 
                 // If the score is too low OR we only care about best entity then early out.
                 // Due to the adjusted score only being able to decrease it can never exceed the highest from here.
                 if (score <= 0f || bestOnly && score <= highestScore)
-                {
                     break;
-                }
+
             }
 
             if (score <= 0f)
@@ -145,6 +145,8 @@ public sealed class NPCUtilitySystem : EntitySystem
     {
         switch (curve)
         {
+            case ConstCurve constCurve:
+                return conScore > 0f ? constCurve.ConstantOnSucceed : constCurve.ConstantOnFail;
             case BoolCurve:
                 return conScore > 0f ? 1f : 0f;
             case InverseBoolCurve:
@@ -163,6 +165,11 @@ public sealed class NPCUtilitySystem : EntitySystem
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
         switch (consideration)
         {
+            case TargetIsPriority priority:
+                if (blackboard.TryGetValue<EntityUid>(priority.Target, out var ent, EntityManager) &&
+                    ent == targetUid)
+                    return 1f;
+                return 0f;
             case FoodValueCon:
             {
                 if (!TryComp<FoodComponent>(targetUid, out var food))
@@ -369,7 +376,7 @@ public sealed class NPCUtilitySystem : EntitySystem
         return Math.Clamp(adjusted, 0f, 1f);
     }
 
-    private void Add(NPCBlackboard blackboard, HashSet<EntityUid> entities, UtilityQuery query)
+    private void Add(NPCBlackboard blackboard, HashSet<EntityUid> entities, UtilityQuery query, int limit)
     {
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
         var vision = blackboard.GetValueOrDefault<float>(blackboard.GetVisionRadiusKey(EntityManager), EntityManager);
@@ -424,6 +431,8 @@ public sealed class NPCUtilitySystem : EntitySystem
                         continue;
 
                     entities.Add(ent);
+                    if (entities.Count >= limit)
+                        break;
                 }
 
                 break;
@@ -432,13 +441,17 @@ public sealed class NPCUtilitySystem : EntitySystem
             {
                 if (!_inventory.TryGetContainerSlotEnumerator(owner, out var enumerator))
                     break;
-
+                // yea kinda shit
                 while (enumerator.MoveNext(out var slot))
                 {
                     foreach (var child in slot.ContainedEntities)
                     {
-                        RecursiveAdd(child, entities);
+                        RecursiveAdd(child, entities, limit);
+                        if (entities.Count >= limit)
+                            break;
                     }
+                    if (entities.Count >= limit)
+                        break;
                 }
 
                 break;
@@ -447,8 +460,11 @@ public sealed class NPCUtilitySystem : EntitySystem
             {
                 foreach (var ent in _npcFaction.GetNearbyHostiles(owner, vision))
                 {
+                    // make this into a filter
                     if (!_weather.CanSeeThroughWeather(owner, ent))
                         continue;
+                    if (entities.Count >= limit)
+                        break;
 
                     entities.Add(ent);
                 }
@@ -459,16 +475,19 @@ public sealed class NPCUtilitySystem : EntitySystem
         }
     }
 
-    private void RecursiveAdd(EntityUid uid, HashSet<EntityUid> entities)
+    private void RecursiveAdd(EntityUid uid, HashSet<EntityUid> entities, int limit)
     {
         // TODO: Probably need a recursive struct enumerator on engine.
         var xform = _xformQuery.GetComponent(uid);
         var enumerator = xform.ChildEnumerator;
         entities.Add(uid);
-
+        if (entities.Count >= limit)
+            return;
         while (enumerator.MoveNext(out var child))
         {
-            RecursiveAdd(child, entities);
+            RecursiveAdd(child, entities, limit);
+            if (entities.Count >= limit)
+                return;
         }
     }
 

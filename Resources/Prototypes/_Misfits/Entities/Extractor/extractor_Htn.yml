@@ -3,14 +3,21 @@
   query:
   - !type:NearbyHostilesQuery
   considerations:
+  - !type:TargetIsPriority
+    target: PriorityTargetEntity
+    curve: !type:ConstCurve
+      constantSucceed: 0.3
+      constantFail: 0.1
   - !type:TargetIsAliveCon
-    curve: !type:BoolCurve
+    curve: !type:ConstCurve
+      constantSucceed: 1.0
+      constantFail: 0.1
   - !type:TargetDistanceCon
     curve: !type:PresetCurve
-      preset: TargetDistance
-  - !type:TargetHealthCon
-    curve: !type:PresetCurve
-      preset: TargetHealth
+      preset: TargetDistanceExpanded
+#  - !type:TargetHealthCon
+#    curve: !type:PresetCurve
+#      preset: TargetHealth
 
 - type: utilityQuery
   id: PriorityTargetService
@@ -25,16 +32,21 @@
   query:
   - !type:NearbyHostilesQuery
   considerations:
+  - !type:TargetIsPriority
+    target: PriorityTargetEntity
+    curve: !type:ConstCurve
+      constantSucceed: 0.3
+      constantFail: 0.1
   - !type:TargetIsAliveCon
-    curve: !type:BoolCurve
+    curve: !type:ConstCurve
+      constantSucceed: 1.0
+      constantFail: 0.1
   - !type:TargetDistanceCon
     curve: !type:PresetCurve
-      preset: TargetDistance
-  - !type:TargetHealthCon
-    curve: !type:PresetCurve
-      preset: TargetHealth
-#  - !type:TargetAccessibleCon
-#    curve: !type:BoolCurve
+      preset: TargetDistanceExpanded
+#  - !type:TargetHealthCon
+#    curve: !type:PresetCurve
+#      preset: TargetHealth
 
 
 - type: htnCompound
@@ -56,16 +68,13 @@
   branches:
   - tasks:
     - !type:HTNPrimitiveTask
-      operator: !type:NoOperator
-      services:
-      - !type:UtilityService
-        id: PriorityTarget
+      operator: !type:UtilityOperator
         proto: PriorityTargetService
-        key: PriorityTarget
+        keyCoordinates: PriorityTarget
+        key: PriorityTargetEntity
     preconditions:
     - !type:KeyNotExistsPrecondition
       key: PriorityTarget
-
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:MoveToOperator
