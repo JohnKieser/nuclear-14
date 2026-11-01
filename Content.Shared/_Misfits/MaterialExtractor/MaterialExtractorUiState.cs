@@ -20,9 +20,12 @@ public sealed class MaterialExtractorEjectFuelMessage : BoundUserInterfaceMessag
 [Serializable, NetSerializable]
 public sealed class MaterialExtractorUiState : BoundUserInterfaceState
 {
+    public bool CanShutdown;
     public bool Running;
     public float Fuel;
     public float FuelCapacity;
+
+    public float HealthPercent;
     // public bool Unattended;
     public bool FuelDepleted;
 }

@@ -9,6 +9,7 @@
         <Label Name="DetailLabel" Text="Ready" />
         <BoxContainer Orientation="Horizontal" Margin="0 8 0 0">
             <ProgressBar Name="FuelBar" HorizontalExpand="True" MinValue="0" MaxValue="1" />
+            <ProgressBar Name="HealthBar" HorizontalExpand="True" MinValue="0" MaxValue="1" />
             <Label Name="FuelLabel" Margin="8 0 0 0" Text="Fuel: 0" />
             <Button Name="EjectButton" Margin="8 0 0 0" Text="Eject" />
         </BoxContainer>

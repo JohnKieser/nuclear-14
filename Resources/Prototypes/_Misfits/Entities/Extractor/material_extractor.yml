@@ -29,10 +29,9 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 150
+        damage: 200
       behaviors:
-      - !type:SolutionExplosionBehavior
-        solution: tank
+      - !type:ExplodeBehavior
   # Balance: all economic and encounter tuning is kept here.
   - type: MaterialExtractor
     operatorRadius: 4

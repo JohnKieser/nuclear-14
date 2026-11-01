@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Content.Server._Misfits.MaterialExtractor;
 using Content.Server.Worldgen.Components;
 using Content.Shared.Ghost;
 using Content.Shared.Mind.Components;
@@ -192,7 +193,19 @@ public sealed class WorldControllerSystem : EntitySystem
                 }
 
                 if (c is not null)
+                {
                     c.Loaders = loaders;
+                }
+
+                if (ent is not null && c?.Loaders is not null)
+                {
+                    // Misfits Add: This is for
+                    var ev = new SpawnChunkReloaded(ent.Value, chunk, c.Loaders);
+                    RaiseLocalEvent(ent.Value,ref ev);
+                    //End
+                }
+
+
             }
         }
 

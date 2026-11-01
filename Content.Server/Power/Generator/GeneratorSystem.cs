@@ -200,7 +200,21 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
         }
 
         generator.On = on;
+        FuelGenToggleEvent(uid, generator, on);
         UpdateState(uid, generator);
+    }
+
+    private void FuelGenToggleEvent(EntityUid uid, FuelGeneratorComponent generatorComp, bool on)
+    {
+        if (!on)
+        {
+            var ev_off = new GeneratorTurnedOff();
+            RaiseLocalEvent(uid, ref ev_off);
+            return;
+        }
+
+        var ev_on = new GeneratorTurnedOn();
+        RaiseLocalEvent(uid, ref ev_on);
     }
 
     public override void Update(float frameTime)
@@ -294,3 +308,12 @@ public sealed class GeneratorEmpty
 {
     public static readonly GeneratorEmpty Instance = new();
 }
+/// <summary>
+/// misfits added for MaterialExtractor which needs convenient way to
+/// know when power switches on/off for state transitions
+/// </summary>
+[ByRefEvent]
+public record struct GeneratorTurnedOff;
+
+[ByRefEvent]
+public record struct GeneratorTurnedOn;

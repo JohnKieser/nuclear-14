@@ -7,7 +7,7 @@ namespace Content.Shared.DoAfter;
 
 [Serializable, NetSerializable]
 [DataDefinition]
-[Access(typeof(SharedDoAfterSystem))]
+//[Access(typeof(SharedDoAfterSystem))]
 public sealed partial class DoAfter
 {
     [DataField("index", required:true)]

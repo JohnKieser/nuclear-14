@@ -28,8 +28,12 @@ public sealed partial class MaterialExtractorWindow : FancyWindow
         //     ? "Requires an operator within 4 tiles"
         //     : state.FuelDepleted ? "Fuel depleted" : "Ready to extract materials";
         FuelBar.Value = state.FuelCapacity > 0 ? state.Fuel / state.FuelCapacity : 0;
+        HealthBar.Value = state.HealthPercent;
         FuelLabel.Text = $"Fuel: {(int) MathF.Floor(state.Fuel)}";
         StartButton.Visible = !state.Running;
+
         StopButton.Visible = state.Running;
+        StopButton.Disabled = state.CanShutdown;
+        EjectButton.Disabled = state.CanShutdown;
     }
 }
